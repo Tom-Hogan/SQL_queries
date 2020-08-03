@@ -1,0 +1,655 @@
+/*
+7/12/2011 - Craig Love, Pragmatic Works
+clove@pragmaticworks.com
+
+Script contains a orderly progression of MDX examples.
+*/
+
+
+SELECT 
+FROM [Adventure Works];
+
+
+//Most inclusive query for [Reseller Sales Amount]
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS
+FROM [Adventure Works];
+
+
+//Now using a tuple
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	[Date].[Month of Year].[Month Of Year].[January] ON ROWS
+FROM [Adventure Works];
+
+
+
+//[Date].[Calendar Year].&[2005]
+//Discuss KEY versue Name
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	[Date].[Calendar Year].&[2005] ON ROWS
+FROM [Adventure Works];
+
+GO
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	[Date].[Calendar Year].[CY 2005] ON ROWS
+FROM [Adventure Works];
+
+
+
+
+
+
+
+
+
+
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	[Date].[Calendar Year].[CY 2005] ON ROWS
+FROM [Adventure Works];
+
+
+
+//Now using a tuple of two dimensions
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	(
+		[Date].[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+	) ON ROWS
+FROM [Adventure Works];
+
+
+
+//Two Months (WRONG)  -- Remember definition of tuple.
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	(
+		[Date].[Month of Year].[January] 
+		,[Date].[Month of Year].[February] 
+	) ON ROWS
+FROM [Adventure Works];
+
+
+
+//Two Months using a SET of tuples.
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	{
+		[Date].[Month of Year].[January]
+		,[Date].[Month of Year].[February] 
+	} ON ROWS
+FROM [Adventure Works];
+
+
+//COLUMNS = 0
+//ROWS = 1
+//PAGES = 2
+//SECTIONS = 3
+//CHAPTERS = 4
+
+
+
+
+//Two Months using SET of tuples.  Each tuple contains 2 dimensions.
+//Maintain dimensionality!!
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	{
+		(
+		[Date].[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+		)
+		,
+		(
+		[Date].[Month of Year].[February] 
+		,[Product].[Category].[Bikes]
+		)
+		
+	} ON ROWS
+FROM [Adventure Works];
+
+
+
+//ORDER MATTERS!!  Yes, same dimensionality but AS engine doesn't care!
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	{
+		(
+		[Date].[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+		)
+		,
+		(
+		[Product].[Category].[Bikes]
+		,[Date].[Month of Year].[February] 
+		)
+		
+	} ON ROWS
+FROM [Adventure Works];
+
+
+
+//Members and Children
+SELECT 
+	[Measures].[Reseller Sales Amount]	ON COLUMNS
+	,
+	{
+	[Product].[Category].[Accessories]
+	,[Product].[Category].[Bikes]
+	,[Product].[Category].[Clothing]
+	,[Product].[Category].[Components]
+	}
+	ON ROWS
+FROM [Adventure Works];
+
+
+SELECT 
+	[Measures].[Reseller Sales Amount]	ON COLUMNS
+	,
+	[Product].[Category].Members
+	ON ROWS
+FROM [Adventure Works];
+
+
+
+SELECT 
+	[Measures].[Reseller Sales Amount]	ON COLUMNS
+	,
+	[Product].[Category].Children
+	ON ROWS
+FROM [Adventure Works];
+
+
+
+//WHERE CLAUSE
+SELECT 
+	[Measures].[Reseller Sales Amount] ON COLUMNS
+	,[Product].[Category].Members ON ROWS
+FROM [Adventure Works]
+WHERE [Date].[Calendar].[Calendar Year].&[2006];
+
+
+//Switch to Internet sales to review NULLS
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,[Product].[Category].Members ON ROWS
+FROM [Adventure Works]
+WHERE [Date].[Calendar].[Calendar Year].&[2005];
+
+
+//Use NON EMPTY to remove null cells
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY
+	[Product].[Category].Members ON ROWS
+FROM [Adventure Works]
+WHERE [Date].[Calendar].[Calendar Year].&[2005];
+
+
+
+
+//Same example using 2 different hierarchies
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	(
+	[Product].[Category].Children 
+	,[Product].[SubCategory].Children 
+	)
+	ON ROWS
+FROM [Adventure Works]
+WHERE [Date].[Calendar].[Calendar Year].&[2005];
+
+
+//Same example using 2 different hierarchies
+// Now with NON EMPTY
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY
+	(
+	[Product].[Category].Children 
+	,[Product].[SubCategory].Children 
+	)
+	ON ROWS
+FROM [Adventure Works]
+WHERE [Date].[Calendar].[Calendar Year].&[2005];
+
+
+//Sorting Data
+//(this example is unsorted)
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY
+		(
+		[Product].[Category].Children 
+		,[Product].[SubCategory].Children 
+		)
+	ON ROWS
+FROM [Adventure Works];
+
+
+//Sorting Data
+//(this example is sorted)
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY
+	ORDER(
+			(
+			[Product].[Category].Children 
+			,[Product].[SubCategory].Children 
+			)
+			, [Measures].[Internet Sales Amount], DESC
+		)
+	ON ROWS
+FROM [Adventure Works];
+
+
+
+//Sorting Data
+//(In previous example, the sorting was based on the
+//Category and SubCategory).  If you want to break the
+//hierarchy, use BASC or BDESC
+SELECT 
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY
+	ORDER(
+			(
+			[Product].[Category].Children 
+			,[Product].[SubCategory].Children 
+			)
+			, [Measures].[Internet Sales Amount], BDESC
+		)
+	ON ROWS
+FROM [Adventure Works];
+
+
+//Simplified the query again.
+//Now looking at Product Categories alone.
+SELECT
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	[Product].[Product Categories].Children ON ROWS
+FROM [Adventure Works];
+
+
+
+//Added Children of Accessories to Tuple.  This 
+//provides us with a deeper level AND restricts the
+//results to Accessories
+SELECT
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	(
+	[Product].[Category].Children
+	,
+	[Product].[Product Categories].[Category].[Accessories].Children
+	) ON ROWS
+FROM [Adventure Works];
+
+
+//NextMember example
+//Cube is very positional aware.  Review previous query and look at BikeStands
+SELECT
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	(
+	[Product].[Product Categories].[Category].[Accessories].[Bike Stands].NextMember
+	) ON ROWS
+FROM [Adventure Works];
+
+
+//TOPCOUNT Example
+//This query provides list of [Internet Sales Amount] 
+// for all products
+SELECT
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY 
+	([Product].[Product].Children) 
+	ON ROWS
+FROM [Adventure Works];
+
+
+
+//Same query only showing TOP 10 Sales
+SELECT
+	[Measures].[Internet Sales Amount] ON COLUMNS
+	,
+	NON EMPTY 
+	TOPCOUNT
+		(
+			([Product].[Product].Children) 
+			,10
+			,[Measures].[Internet Sales Amount]
+		)
+	ON ROWS
+FROM [Adventure Works];
+
+
+
+
+
+//Need SETS and MEMBERS review here!!
+
+
+//Back to simpler times for a moment.  
+//Here is query used at beginning of this
+//file.
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	(
+		[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+	) ON ROWS
+FROM [Adventure Works];
+
+
+
+//Same query using a SET
+WITH SET [Jan Bikes]
+AS 
+	(
+		[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+	)
+
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	([Jan Bikes]) ON ROWS
+FROM [Adventure Works];
+
+
+//Set of Last 6 Months
+WITH Set [Last6Mon]
+AS
+	LastPeriods
+	(
+	6
+	,[Date].[Calendar].[Month].&[2007]&[1]
+	)
+
+SELECT 
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	([Last6Mon]) ON ROWS
+FROM [Adventure Works];
+
+
+
+//Again back to simpler query.  
+//Here is query used at beginning of this
+//file.
+
+SELECT  
+	[Measures].[Reseller Sales Amount] ON COLUMNS,
+	(
+		[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+	) ON ROWS
+FROM [Adventure Works];
+
+
+//MEMBER example.  Doesn't really do anything useful!
+WITH MEMBER [Measures].[ReSeller]
+
+AS
+	[Measures].[Reseller Sales Amount]
+
+SELECT  
+	[Measures].[ReSeller] ON COLUMNS,
+	(
+		[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+	) ON ROWS
+FROM [Adventure Works];
+
+
+//MEMBER example.  Very simple calculation.
+WITH MEMBER [Measures].[ReSeller]
+
+AS
+	([Measures].[Reseller Sales Amount] / 10000)
+
+SELECT  
+	[Measures].[ReSeller] ON COLUMNS,
+	(
+		[Month of Year].[January] 
+		,[Product].[Category].[Bikes]
+	) ON ROWS
+FROM [Adventure Works];
+
+
+
+
+
+//YTD
+
+//The next 2 examples seem to work but they don't!!
+//Browse the cube if you don't believe me!
+SELECT
+	YTD(
+		[Date].[Calendar].[Calendar Quarter].[Q3 CY 2006]
+		) ON COLUMNS
+FROM [Adventure Works];
+
+SELECT
+	[Measures].[Reseller Sales Amount] ON COLUMNS
+	,
+	YTD(
+		[Date].[Calendar].[Calendar Quarter].[Q3 CY 2006]
+		) ON ROWS
+FROM [Adventure Works];
+
+
+
+
+//CurrentMember - Returns the current member along a specified hierarchy during iteration.
+
+//SSAS has the ability to peform tasks as it traverses the cells of the cube and return these results.  
+//As it traverses the cube, you can use the CurrentMember function.
+
+
+//Sample YTD Calc , QTR to QTR
+
+//Aggregate - Returns a number that is calculated by aggregating over the cells returned by the set expression.
+
+//Query shows YTD values aggregated by months over all the years.
+
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	Aggregate
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+
+SELECT 
+	[Measures].[YTD Sales] ON COLUMNS
+	,
+	([Date].[Month].Members)
+	 ON ROWS
+FROM [Adventure Works];
+
+//Similar query over first 3 quarters of CY 2006.
+//Same query we attempted earlier (only now it works!)
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	Aggregate
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+
+SELECT 
+	{[Measures].[YTD Sales], [Measures].[Reseller Sales Amount]} ON COLUMNS
+	,
+	{
+	[Date].[Calendar].[Calendar Quarter].&[2006]&[1]
+	,[Date].[Calendar].[Calendar Quarter].&[2006]&[2]
+	,[Date].[Calendar].[Calendar Quarter].&[2006]&[3]
+	} ON ROWS
+FROM [Adventure Works];
+
+
+
+//Same query as above only using SUM instead of AGGREGATE
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	SUM
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+
+SELECT 
+	[Measures].[YTD Sales] ON 0
+	,
+	{
+	[Date].[Calendar].[Calendar Quarter].&[2007]&[1]
+	,[Date].[Calendar].[Calendar Quarter].&[2007]&[2]
+	,[Date].[Calendar].[Calendar Quarter].&[2007]&[3]
+	,[Date].[Calendar].[Calendar Quarter].&[2007]&[4]
+	} ON 1
+FROM [Adventure Works];
+
+
+//YTD Aggregation using SUM, HY 1 and 2
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	SUM
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+
+SELECT 
+	[Measures].[YTD Sales] ON COLUMNS
+	,
+	{
+	[Date].[Calendar].[Calendar Year].&[2007].children
+	} ON ROWS
+FROM [Adventure Works];
+
+
+
+//YTD Aggregation using SUM, QTR to QTR using descendants
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	SUM
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+
+SELECT 
+	[Measures].[YTD Sales] ON 0
+	,
+	{
+	DESCENDANTS([Date].[Calendar].[Calendar Year].&[2007], 2)
+	} ON 1
+FROM [Adventure Works];
+
+
+
+//YTD Aggregation using SUM, QTR to QTR using descendants
+// add Qtr sales in columns as well
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	SUM
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+
+SELECT 
+	{
+	([Measures].[Reseller Sales Amount])
+	,([Measures].[YTD Sales])
+	}
+	 ON 0
+	,
+	{
+	DESCENDANTS([Date].[Calendar].[Calendar Year].&[2007], 2)
+	} ON 1
+FROM [Adventure Works];
+
+
+
+//ParallelPeriod - Example
+//Current Month and Last Year Month
+WITH MEMBER [Measures].[LY Same Month]
+AS
+	SUM
+		(
+		ParallelPeriod([Date].[Calendar].[Calendar Year], 1, [Date].[Calendar].CurrentMember)
+		,[Measures].[Reseller Sales Amount]
+		)
+
+
+SELECT 
+	{
+	([Measures].[Reseller Sales Amount])
+	,[Measures].[LY Same Month]
+	}
+	 ON 0
+	,
+	{
+	DESCENDANTS([Date].[Calendar].[Calendar Year].&[2007], 3)
+	} ON 1
+FROM [Adventure Works];
+
+
+
+//Current Month and Last Year Month
+//YTD Aggregation using SUM, QTR to QTR using descendants
+WITH MEMBER [Measures].[YTD Sales]
+AS
+	SUM
+		(
+        PeriodsToDate([Date].[Calendar].[Calendar Year], [Date].[Calendar].CurrentMember)
+        , ([Measures].[Reseller Sales Amount])
+        )
+, SOLVE_ORDER = 0
+
+	MEMBER [Measures].[LY Same Month]
+AS
+	SUM
+		(
+		ParallelPeriod([Date].[Calendar].[Calendar Year], 1, [Date].[Calendar].CurrentMember)
+		,[Measures].[Reseller Sales Amount]
+		)
+, SOLVE_ORDER = 1
+
+	MEMBER [Measures].[LY SameMo YTD]
+AS
+	SUM
+		(
+		PeriodsToDate
+			(		
+			[Date].[Calendar].[Calendar Year]
+			,ParallelPeriod([Date].[Calendar].[Calendar Year], 1, [Date].[Calendar].CurrentMember)
+			)
+		,[Measures].[Reseller Sales Amount]
+		)
+SELECT 
+	{
+	([Measures].[Reseller Sales Amount])
+	,[Measures].[YTD Sales]
+	,[Measures].[LY Same Month]
+	,[Measures].[LY SameMo YTD]
+	}
+	 ON 0
+	,
+	{
+	DESCENDANTS([Date].[Calendar].[Calendar Year].&[2007], 3)
+	} ON 1
+FROM [Adventure Works];
+

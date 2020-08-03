@@ -1,0 +1,18 @@
+WITH 
+    MEMBER [Measures].[% of Parent] 
+    AS
+        CASE
+            WHEN [Dealer].[Dealers by Territory].CurrentMember.level.ordinal = 0
+                THEN 1
+            ELSE [Measures].[Quantity] / ( [Dealer].[Dealers by Territory].CurrentMember.parent, [Measures].[Quantity] )
+        END
+    ,   FORMAT_STRING = "percent"
+
+SELECT  {   [Measures].[Quantity]
+        ,   [Measures].[% of Parent]
+        }   ON COLUMNS
+,       DESCENDANTS
+        (   [Dealer].[Dealers by Territory]
+        ,   [Dealer].[Dealers by Territory].[Region]
+        )   ON  ROWS
+FROM    [sales]

@@ -1,0 +1,15 @@
+WITH 
+    MEMBER [Measures].[% of all] 
+    AS
+        [Measures].[Quantity] / ( [Dealer].[Dealers by Territory].[All], [Measures].[Quantity] )
+        ,   FORMAT_STRING = "percent"
+
+SELECT  {   [Measures].[Quantity]
+        ,   [Measures].[% of all]
+        }   ON COLUMNS
+,       ORDER
+        (   [Dealer].[Dealers by Territory].[Market]
+        ,   [Measures].[% of all]
+        ,   BDESC
+        )   ON ROWS
+FROM    [sales]
