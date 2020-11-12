@@ -11,10 +11,6 @@ History:
 ================================================================================================ */
 SET NOCOUNT ON;
 
---   declare variables
-DECLARE @start_date smalldatetime,
-        @end_date   smalldatetime;
-
 
 -- ------------------------------------------------------------------------------------------------
 -- create table
@@ -23,26 +19,26 @@ DROP TABLE IF EXISTS dbo.dim_date;
 
 CREATE TABLE dbo.dim_date (
     date_id            int           NOT NULL,
-    calendar_date      datetime      NOT NULL,
-    date_name          varchar(15)   NOT NULL,  -- 01/01/2008
-    day_name           varchar(15)   NOT NULL,  -- Tuesday
+    calendar_date      date          NOT NULL,
+    date_name          varchar(10)   NOT NULL,  -- 01/01/2008
+    day_name           varchar(10)   NOT NULL,  -- Tuesday
     week_of_year       tinyint       NOT NULL,  -- 1, 2, 3, etc.
     week_name          varchar(10)   NOT NULL,  -- Wk 01
-    week_full_name     varchar(20)   NOT NULL,  -- Wk 01 2008
+    week_full_name     varchar(15)   NOT NULL,  -- Wk 01 2008
     month_of_year      tinyint       NOT NULL,  -- 1, 2, 3, etc.
     month_name         varchar(10)   NOT NULL,  -- January
-    month_full_name    varchar(20)   NOT NULL,  -- January 2008
+    month_full_name    varchar(15)   NOT NULL,  -- January 2008
     month_start_date   date          NOT NULL,
     month_end_date     date          NOT NULL,
     quarter_of_year    tinyint       NOT NULL,  -- 1, 2, etc.
-    quarter_name       varchar(20)   NOT NULL,  -- Q1
-    quarter_full_name  varchar(20)   NOT NULL,  -- Q1 2008
+    quarter_name       varchar(5)    NOT NULL,  -- Q1
+    quarter_full_name  varchar(10)   NOT NULL,  -- Q1 2008
     quarter_start_date date          NOT NULL,
     quarter_end_date   date          NOT NULL,
-    year_name          varchar(10)   NOT NULL,  -- 2008
+    year_name          varchar(5)    NOT NULL,  -- 2008
     year_start_date    date          NOT NULL,
     year_end_date      date          NOT NULL,
-    --  add business / fiscal date columns --
+    /* add business / fiscal date columns */
     business_day_value decimal(5, 2) NOT NULL,
     etl_audit_id       int           NULL,
     CONSTRAINT dim_time_pk
@@ -57,25 +53,22 @@ GO
 
 
 -- ------------------------------------------------------------------------------------------------
+-- load with initial data
 -- *** set start and end dates of dates to be inserted into the table
 --     end date is set to end of current year, unless you change it
 -- ------------------------------------------------------------------------------------------------
-SET @start_date = '20080101';
-SET @end_date = ( SELECT  cast(year(getdate()) AS varchar(4)) + '1231' );
-
-
--- ------------------------------------------------------------------------------------------------
--- load with initial data
--- ------------------------------------------------------------------------------------------------
---   get all dates between the given start and end dates
 WITH cte_calendar
 AS
     (
-    SELECT  dateadd(DAY, n - 1, @start_date) AS calendar_date
-    FROM    dbo.tally
-    WHERE   n <= datediff(DAY, @start_date, @end_date) + 1
+    SELECT      dateadd(DAY, t.n - 1, dt.table_start_date) AS calendar_date
+    FROM        dbo.tally   AS t
+                /* set start and end dates here*/
+    CROSS APPLY (
+                SELECT  datefromparts(2008, 1, 1)                  AS table_start_date,
+                        datefromparts(year(sysdatetime()), 12, 31) AS table_end_date
+                )           AS dt
+    WHERE       t.n <= datediff(DAY, dt.table_start_date, dt.table_end_date) + 1
     )
--- load table with date data
 INSERT INTO dbo.dim_date (
             date_id,
             calendar_date,
@@ -112,8 +105,8 @@ SELECT      convert(char(8), c.calendar_date, 112)                              
             dateadd(DAY, - ( day(c.calendar_date) - 1 ), c.calendar_date)                                                        AS month_start_date,
             dateadd(DAY, - ( day(dateadd(MONTH, 1, c.calendar_date))), dateadd(MONTH, 1, c.calendar_date))                       AS month_end_date,
             datepart(QUARTER, c.calendar_date)                                                                                   AS quarter_of_year,
-            'Q' + convert(varchar(20), datepart(QUARTER, c.calendar_date))                                                       AS quarter_name,
-            'Q' + convert(varchar(20), datepart(QUARTER, c.calendar_date)) + ' ' + datename(YEAR, c.calendar_date)               AS quarter_full_name,
+            'Q' + convert(varchar(5), datepart(QUARTER, c.calendar_date))                                                        AS quarter_name,
+            'Q' + convert(varchar(5), datepart(QUARTER, c.calendar_date)) + ' ' + datename(YEAR, c.calendar_date)                AS quarter_full_name,
             dateadd(QUARTER, datediff(QUARTER, 0, c.calendar_date), 0)                                                           AS quarter_start_date,
             dateadd(QUARTER, 1, dateadd(QUARTER, datediff(QUARTER, 0, c.calendar_date), 0)) - 1                                  AS quarter_end_date,
             datename(YEAR, c.calendar_date)                                                                                      AS year_name,
