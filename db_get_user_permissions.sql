@@ -115,5 +115,6 @@ ORDER BY    login_name,
             user_name,
             role_name,
             permission_class,
-            permission_name DESC,
-            permission_object;
+            permission_object,
+            permission_name DESC;
+
