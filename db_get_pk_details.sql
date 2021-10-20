@@ -40,11 +40,10 @@ SELECT      object_schema_name(pk.parent_object_id)  AS table_schema,
             END                                      AS is_pk_clustered
 FROM        sys.key_constraints AS pk
 WHERE       objectpropertyex(pk.parent_object_id, 'IsUserTable') = 1
-            -- -------------------------------------------------------------------------------------------------
+            -- ------------------------------------------------------------------------------------------------
             -- to get specific table
-            -- -------------------------------------------------------------------------------------------------
+            -- ------------------------------------------------------------------------------------------------
 --AND         object_name(pk.parent_object_id) = 'fact_sales'
 ORDER BY    table_schema,
             table_name,
-            constraint_name
-;
+            constraint_name;

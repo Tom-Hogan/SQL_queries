@@ -56,17 +56,13 @@ RESTORE DATABASE WideWorldImporters
 
 RESTORE LOG WideWorldImporters
     FROM DISK = 'X:\Backups\WideWorldImporters_tlog_201805010400.trn'
-    WITH MOVE 'WideWorldImporters'
-             TO 'D:\SQLData\WideWorldImporters.mdf',
-         MOVE 'WideWorldImporters_log'
-             TO 'L:\SQLLogs\WideWorldImporters_log.ldf',
-         REPLACE,
-         NORECOVERY;
+    WITH NORECOVERY;
 
 RESTORE LOG WideWorldImporters
     FROM DISK = 'X:\Backups\WideWorldImporters_tlog_201805010800.trn'
-    WITH MOVE 'WideWorldImporters'
-             TO 'D:\SQLData\WideWorldImporters.mdf',
-         MOVE 'WideWorldImporters_log'
-             TO 'L:\SQLLogs\WideWorldImporters_log.ldf',
-         REPLACE;
+    WITH NORECOVERY;
+    /* -- add STOPAT clause to do a point in time recovery
+         STOPAT = 'May 1, 2018 6:00:00 AM'; */
+
+RESTORE LOG WideWorldImporters
+    WITH RECOVERY;

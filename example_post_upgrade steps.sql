@@ -26,7 +26,7 @@ GO
 DBCC UPDATEUSAGE(0);
 
 -- 3. Integrity checks
-DBCC CHECKDB WITH DATA_PURITY;
+DBCC CHECKDB WITH NO_INFOMSGS, DATA_PURITY;
 
 -- 4. Update statistics
 EXEC sys.sp_MSforeachtable @command1 = 'UPDATE STATISTICS ? WITH FULLSCAN';
