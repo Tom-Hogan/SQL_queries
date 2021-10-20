@@ -12,8 +12,8 @@ SET NOCOUNT ON;
 
 
 -- return results
-WITH cte_executions
-AS
+WITH
+cte_executions AS
     (
     SELECT  execution_id,
             folder_name,

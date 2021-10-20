@@ -1,7 +1,7 @@
 /* ================================================================================================
 Purpose:
     Lists current file sizes with free space per file for all databases.
- 
+
 History:
     2017-02-17  Tom Hogan           Created.
 ================================================================================================ */
@@ -11,6 +11,7 @@ USE master;
 DECLARE @database_name nvarchar(128),
         @database_list CURSOR,
         @sql_cmd       nvarchar(MAX);
+
 
 -- create temp table to hold results
 DROP TABLE IF EXISTS #db_file;
@@ -36,17 +37,16 @@ FOR
     SELECT      quotename(name)
     FROM        sys.databases
     WHERE       state = 0   -- online
-    ORDER BY    name
-    ;
+    ORDER BY    name;
 
 
--- open cursor and work through records
+-- work through the databases 
+-- and load information about their file size to the temp table
 OPEN @database_list;
 FETCH NEXT FROM @database_list INTO @database_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    -- build SQL query to get and store database file data
     SET @sql_cmd = N'
         USE ' + @database_name + N';
 
@@ -82,12 +82,11 @@ BEGIN
                     is_sparse,
                     is_percent_growth,
                     physical_name
-        FROM        sys.database_files
-        ';
+        FROM        sys.database_files;';
 
-    -- run the query
     EXEC sys.sp_executesql 
         @stmt = @sql_cmd;
+
 
     FETCH NEXT FROM @database_list INTO @database_name;
 END;
@@ -109,8 +108,7 @@ SELECT      database_name,
             is_percent_growth,
             physical_name
 FROM        #db_file
---WHERE       free_space_in_MB > 5000
+--WHERE       free_space_in_MB > 10000
 --AND         file_type = 'ROWS'
 ORDER BY    database_name,
-            file_type DESC
-;
+            file_type DESC;

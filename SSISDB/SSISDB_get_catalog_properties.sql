@@ -19,5 +19,5 @@ FROM    catalog.catalog_properties;
 -- command to change catalog properties
 EXEC catalog.configure_catalog 
     @property_name = N'RETENTION_WINDOW',
-    @property_value = N'45';
+    @property_value = N'90';
 -- */
