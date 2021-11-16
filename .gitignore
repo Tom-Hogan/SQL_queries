@@ -268,3 +268,4 @@ __pycache__/
 /MaintenanceSolution.sql
 /who_is_active.sql
 .azuredatastudio/settings.json
+/sp_WhoIsActive.sql
