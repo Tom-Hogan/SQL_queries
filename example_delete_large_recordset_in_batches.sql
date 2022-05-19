@@ -6,13 +6,12 @@ Purpose:
 History:
     Taken from http://michaeljswart.com/2014/09/take-care-when-scripting-batches/
 ================================================================================================ */
-
 DECLARE @largest_key_processed int = -1,
         @next_batch_max        int,
         @counter               int = 1;
 
 
--- loop through the records to be deleted until there are no more records that match the criteria   
+/* loop through the records to be deleted until there are no more records that match the criteria */
 WHILE ( @counter > 0 )
 BEGIN
 

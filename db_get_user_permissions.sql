@@ -5,8 +5,6 @@ Purpose:
 History:
     2020-10-14  Tom Hogan           Created.
 ================================================================================================ */
-
-
 /* database roles with no associated users */
 SELECT      ''                             AS login_name,
             dp.name                        AS user_name,
@@ -112,4 +110,3 @@ ORDER BY    login_name,
             permission_class,
             permission_object,
             permission_name DESC;
-

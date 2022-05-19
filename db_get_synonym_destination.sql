@@ -5,7 +5,6 @@ Purpose:
 History:
     2010-08-26  Tom Hogan           Created.
 ================================================================================================ */
-
 SELECT      schema_name(schema_id)                                             AS synonym_schema,
             name                                                               AS synonym_name,
             coalesce(parsename(base_object_name, 4), @@servername)             AS server_name,
@@ -14,5 +13,4 @@ SELECT      schema_name(schema_id)                                             A
             parsename(base_object_name, 1)                                     AS object_name
 FROM        sys.synonyms
 ORDER BY    synonym_schema,
-            synonym_name
-;
+            synonym_name;

@@ -5,7 +5,6 @@ Purpose:
 History:
     2011-12-07  Tom Hogan           Created.
 ================================================================================================ */
-
 SELECT      p.name                            AS publication,
             CASE
                 WHEN p.status = 1

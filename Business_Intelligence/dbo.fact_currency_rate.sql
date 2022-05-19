@@ -10,7 +10,8 @@ SET NOCOUNT ON;
 
 DROP TABLE IF EXISTS dbo.fact_currency_rate;
 
-CREATE TABLE dbo.fact_currency_rate (
+CREATE TABLE dbo.fact_currency_rate
+(
     currency_id     int            NOT NULL,
     date_id         int            NOT NULL,
     average_rate    decimal(19, 4) NOT NULL,

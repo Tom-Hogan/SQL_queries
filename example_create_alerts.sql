@@ -10,9 +10,9 @@ History:
                                     https://www.brentozar.com/blitz/configure-sql-server-alerts/
 ================================================================================================ */
 
--- ------------------------------------------------------------------------------------------------
--- Severity 017 - Insufficient resources-
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 017 - Insufficient resources-
+*/
 EXEC msdb.dbo.sp_add_alert 
     @name = N'Severity 017',
     @message_id = 0,
@@ -26,9 +26,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 018 - Nonfatal internal error
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 018 - Nonfatal internal error
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Severity 018',
     @message_id = 0,
@@ -42,9 +42,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 019 - Fatal error in resource
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 019 - Fatal error in resource
+*/
 EXEC msdb.dbo.sp_add_alert 
     @name = N'Severity 019', 
     @message_id = 0,
@@ -58,9 +58,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 020 - Fatal error in current process
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 020 - Fatal error in current process
+*/
 EXEC msdb.dbo.sp_add_alert 
     @name = N'Severity 020', 
     @message_id = 0,
@@ -74,9 +74,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 021 - Fatal error in database processes
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 021 - Fatal error in database processes
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Severity 021',
     @message_id = 0,
@@ -90,9 +90,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 022 - Fatal error: Table integrity suspect
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 022 - Fatal error: Table integrity suspect
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Severity 022',
     @message_id = 0,
@@ -106,9 +106,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 023 - Fatal error: Database integrity suspect
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 023 - Fatal error: Database integrity suspect
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Severity 023',
     @message_id = 0,
@@ -122,9 +122,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 024 - Fatal error: Hardware error
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 024 - Fatal error: Hardware error
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Severity 024',
     @message_id = 0,
@@ -138,9 +138,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Severity 025 - Fatal error
--- ------------------------------------------------------------------------------------------------
+/*
+    Severity 025 - Fatal error
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Severity 025',
     @message_id = 0,
@@ -154,9 +154,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Error 823 - IO error: OS cannot read the data.
--- ------------------------------------------------------------------------------------------------
+/*
+    Error 823 - IO error: OS cannot read the data.
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Error 823',
     @message_id = 823,
@@ -170,9 +170,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Error 824 - IO error: SQL Server cannot read the data.
--- ------------------------------------------------------------------------------------------------
+/*
+    Error 824 - IO error: SQL Server cannot read the data.
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Error 824',
     @message_id = 824,
@@ -186,9 +186,9 @@ EXEC msdb.dbo.sp_add_notification
     @notification_method = 1;
 
 
--- ------------------------------------------------------------------------------------------------
--- Error 825 - IO error: SQL Server took multiple attempts to read the data
--- ------------------------------------------------------------------------------------------------
+/*
+    Error 825 - IO error: SQL Server took multiple attempts to read the data
+*/
 EXEC msdb.dbo.sp_add_alert
     @name = N'Error 825',
     @message_id = 825,

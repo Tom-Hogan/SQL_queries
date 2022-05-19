@@ -13,30 +13,31 @@ Example:
 History:
     2013-04-29  Tom Hogan           Created.
 ================================================================================================ */
-SET NOCOUNT ON;
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-
-
-DECLARE @sales_rep_id int;
-
-
--- strip spaces from passed-in value
-SET @sales_rep_key = ltrim(rtrim(@sales_rep_key));
-
-
--- check for existence of record with given key
-SET @sales_rep_id = (
-                    SELECT  sales_rep_id
-                    FROM    dbo.dim_sales_rep
-                    WHERE   sales_rep_key = @sales_rep_key
-                    );
-
-
--- if a record with the given key was not found
---   insert a rew record
-IF @sales_rep_id IS NULL
 BEGIN
-    INSERT INTO dbo.dim_sales_rep (
+    SET NOCOUNT ON;
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+
+    DECLARE @sales_rep_id int;
+
+    /* strip spaces from passed-in value */
+    SET @sales_rep_key = trim(@sales_rep_key);
+
+
+    /* check for existence of record with given key */
+    SET @sales_rep_id =
+            (
+                SELECT  sales_rep_id
+                FROM    dbo.dim_sales_rep
+                WHERE   sales_rep_key = @sales_rep_key
+            );
+
+
+    /*  if a record with the given key was not found, insert a rew record */
+    IF @sales_rep_id IS NULL
+    BEGIN
+        INSERT INTO dbo.dim_sales_rep
+        (
                 sales_rep_key,
                 last_name,
                 first_name,
@@ -53,8 +54,8 @@ BEGIN
                 sales_role,
                 inactive_flag,
                 inferred_member_flag
-    )
-    SELECT      @sales_rep_key AS sales_rep_key,
+        )
+        SELECT  @sales_rep_key AS sales_rep_key,
                 'N/A'          AS last_name,
                 'N/A'          AS first_name,
                 ''             AS middle_initial,
@@ -71,14 +72,14 @@ BEGIN
                 0              AS inactive_flag,
                 1              AS inferred_member_flag;
 
-    SET @sales_rep_id = scope_identity();
+        SET @sales_rep_id = scope_identity();
+    END;
+
+
+    SELECT  sales_rep_id,
+            sales_rep_key
+    FROM    dbo.dim_sales_rep
+    WHERE   sales_rep_id = @sales_rep_id;
+
 END;
-
-
--- return the result
-SELECT  sales_rep_id,
-        sales_rep_key
-FROM    dbo.dim_sales_rep
-WHERE   sales_rep_id = @sales_rep_id;
-
 GO

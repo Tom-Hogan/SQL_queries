@@ -14,7 +14,6 @@ DECLARE @execution_id int;
 SET @execution_id = 0;
 
 
--- return results
 SELECT      execution_parameter_id,
             CASE
                 WHEN object_type = 20

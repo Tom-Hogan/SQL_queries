@@ -2,7 +2,8 @@
 Purpose:
     Lists all package executions run on current server.
 
-    *** Uncomment and update WHERE clause to filter results as needed.
+Notes:
+    Contains some commented out predefined WHERE clauses.
 
 History:
     2015-02-27  Tom Hogan           Created.
@@ -11,10 +12,9 @@ USE SSISDB;
 SET NOCOUNT ON;
 
 
--- return results
 WITH
-cte_executions AS
-    (
+cte_executions AS 
+(
     SELECT  execution_id,
             folder_name,
             project_name,
@@ -47,24 +47,24 @@ cte_executions AS
             executed_as_name,
             use32bitruntime                    AS used_32_bit_runtime
     FROM    catalog.executions
-    )
-SELECT      execution_id,
-            folder_name,
-            project_name,
-            package_name,
-            execution_status,
-            start_time,
-            end_time,
-            duration_in_sec,
-            server_name,
-            executed_as_name,
-            used_32_bit_runtime
-FROM        cte_executions
-            -- ------------------------------------------------------------------------------------------------
-            -- put in whatever WHERE predicates you might like
-            -- ------------------------------------------------------------------------------------------------
--- WHERE       folder_name = 'Data_warehouse'
--- WHERE       project_name = 'ETL_Validation'
--- WHERE       package_name = 'ETL_Validation_step_1'
--- WHERE       execution_status IN ('failed', 'ended unexpectedly')
-ORDER BY    start_time DESC;
+)
+SELECT      e.execution_id,
+            e.folder_name,
+            e.project_name,
+            e.package_name,
+            e.execution_status,
+            e.start_time,
+            e.end_time,
+            e.duration_in_sec,
+            e.server_name,
+            e.executed_as_name,
+            e.used_32_bit_runtime
+FROM        cte_executions AS e
+            /* 
+            === add / modify as needed ====
+            */
+--WHERE       e.folder_name = 'Data_warehouse'
+--WHERE       e.project_name = 'ETL_Validation'
+--WHERE       e.package_name = 'ETL_Validation_step_1'
+--WHERE       e.execution_status IN ('failed', 'ended unexpectedly')
+ORDER BY    e.start_time DESC;

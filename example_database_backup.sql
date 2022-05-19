@@ -6,23 +6,22 @@ Purpose:
 History:
     2005-06-21  Tom Hogan           Created.
 ================================================================================================ */
-
 DECLARE @full_path     varchar(250),
         @backup_path   varchar(150),
         @database_name nvarchar(128);
 
-SET @backup_path = '\\File_Server\SQL_DB_Backups\DBA_scripts';  -- update with file path where the backup file will be placed
-SET @database_name = N'DBA_scripts';                            -- update with database name to be backed up
+SET @backup_path = '\\File_Server\SQL_DB_Backups\DBA_scripts';  /* update with file path where the backup file will be placed */
+SET @database_name = N'DBA_scripts';                            /* update with database name to be backed up */
 
 
--- build backup path
+/* build backup path */
 IF right(@backup_path, 1) <> '\'
     SET @backup_path = @backup_path + '\';
 
 SET @full_path = @backup_path + @database_name + '_co_' + convert(varchar(10), getdate(), 112) + '.bak';
 
 
--- perform full backup
+/* perform full backup */
 BEGIN TRY
     BACKUP DATABASE @database_name
         TO  DISK = @full_path

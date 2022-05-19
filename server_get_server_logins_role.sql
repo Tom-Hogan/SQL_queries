@@ -2,7 +2,8 @@
 Purpose:
     Lists logins and server roles.
 
-    *** Uncomment and update WHERE clause to filter results for a specific role.
+Notes:
+    Contains commented out predefined AND in the WHERE clause to filter results for a specific role.
  
 History:
     2011-10-03  Tom Hogan           Created.
@@ -22,12 +23,11 @@ SELECT      p.name      AS login_name,
 FROM        sys.server_principals   AS p
 LEFT JOIN   sys.server_role_members AS m    ON  m.member_principal_id = p.principal_id
 LEFT JOIN   sys.server_principals   AS r    ON  r.principal_id = m.role_principal_id
-            -- ------------------------------------------------------------------------------------------------
-            -- to get a specific role(s)
-            -- ------------------------------------------------------------------------------------------------
 WHERE       p.is_fixed_role <> 1
 AND         p.name NOT LIKE '##%'
+            /*
+            === to get specific role ===
+            */
 --AND         r.name = 'sysadmin'
 ORDER BY    p.name,
-            r.name
-;
+            r.name;

@@ -24,5 +24,4 @@ SELECT  serverproperty('MachineName')                               AS computer_
             WHEN serverproperty('IsHADREnabled') = 1
                 THEN 'Y'
             ELSE 'No'
-        END                                                         AS is_always_on_enabled
-;
+        END                                                         AS is_always_on_enabled;

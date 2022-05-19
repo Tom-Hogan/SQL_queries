@@ -25,15 +25,15 @@ SELECT      c.Path           AS report_path,
 FROM        dbo.Catalog         AS c
 LEFT JOIN   dbo.Users           AS cbu  ON  cbu.UserID = c.CreatedByID
 LEFT JOIN   dbo.Users           AS mbu  ON  mbu.UserID = c.ModifiedByID
-            -- get last run time
+            /* get last run time */
 LEFT JOIN   (
-            SELECT      ReportID,
-                        max(TimeStart) AS LastRunTime
-            FROM        dbo.ExecutionLog
-            GROUP BY    ReportID
+                SELECT      ReportID,
+                            max(TimeStart) AS LastRunTime
+                FROM        dbo.ExecutionLog
+                GROUP BY    ReportID
             )                   AS lr   ON  lr.ReportID = c.ItemID
 LEFT JOIN   dbo.ExecutionLog    AS lre  ON  lre.ReportID = lr.ReportID
                                         AND lre.TimeStart = lr.LastRunTime
-WHERE       c.Type = 2  -- report
+WHERE       c.Type = 2  /* report */
 ORDER BY    c.Path,
             c.Name;

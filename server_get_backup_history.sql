@@ -2,12 +2,13 @@
 Purpose:
     Lists history of backups performed over the past 7 days.
 
-    *** Uncomment and update WHERE clause to filter for a specific database.
+Notes:
+    Contains commented out predefined AND in the WHERE clause to filter results for a specific database.
  
 History:
     2012-09-04  Tom Hogan           Created, based on a script by Pinal Dave.
 ================================================================================================ */
-USE master;
+USE msdb;
 
 
 SELECT      s.server_name,
@@ -27,14 +28,13 @@ SELECT      s.server_name,
             cast(s.backup_size / 1024 / 1024 AS int)                    AS backup_size_in_MB,
             datediff(MINUTE, s.backup_start_date, s.backup_finish_date) AS backup_time_in_min,
             s.is_copy_only
-FROM        msdb.dbo.backupset          AS s
-JOIN        msdb.dbo.backupmediafamily  AS m    ON  m.media_set_id = s.media_set_id
-            -- get past 7 day's worth of backups
-WHERE       s.backup_start_date >= dateadd("day", -7, getdate())
-            -- ------------------------------------------------------------------------------------------------
-            -- to get specific database
-            -- ------------------------------------------------------------------------------------------------
+FROM        dbo.backupset           AS s
+JOIN        dbo.backupmediafamily   AS m    ON  m.media_set_id = s.media_set_id
+            /* get past 7 day's worth of backups */
+WHERE       s.backup_start_date >= dateadd(DAY, -7, getdate())
+            /*
+            === to get specific database ===
+            */
 --AND         s.database_name = 'database_name'
 ORDER BY    s.database_name,
-            s.backup_finish_date DESC
-;
+            s.backup_finish_date DESC;

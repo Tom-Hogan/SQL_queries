@@ -1,4 +1,5 @@
-CREATE OR ALTER FUNCTION dbo.split_string_xml (
+CREATE OR ALTER FUNCTION dbo.split_string_xml
+(
     @list      nvarchar(MAX),
     @delimiter nvarchar(2)
 )
@@ -19,10 +20,10 @@ History:
 ================================================================================================ */
 RETURN 
 
-SELECT      ltrim(rtrim(y.i.value('(./text())[1]', 'nvarchar(4000)')))  AS token,
-            row_number() OVER ( ORDER BY ( SELECT 0 ))                  AS ordinal
+SELECT      ltrim(rtrim(y.i.value('(./text())[1]', 'nvarchar(4000)'))) AS token,
+            row_number() OVER ( ORDER BY ( SELECT 0 ))                 AS ordinal
 FROM        (
-            SELECT  convert(xml, '<i>' + replace(@list, @delimiter, '</i><i>') + '</i>').query('.') AS x
+                SELECT  convert(xml, '<i>' + replace(@list, @delimiter, '</i><i>') + '</i>').query('.') AS x
             )            AS a
 CROSS APPLY x.nodes('i') AS y(i);
 

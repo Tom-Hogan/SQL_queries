@@ -9,14 +9,14 @@ USE SSISDB;
 SET NOCOUNT ON;
 
 
--- check SSIS catalog properties
+/* check SSIS catalog properties */
 SELECT  property_name,
         property_value
 FROM    catalog.catalog_properties;
 
 
 /*
--- command to change catalog properties
+/* command to change catalog properties */
 EXEC catalog.configure_catalog 
     @property_name = N'RETENTION_WINDOW',
     @property_value = N'90';

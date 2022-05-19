@@ -5,7 +5,6 @@ Purpose:
 History:
     2008-02-20  Tom Hogan           Created.
 ================================================================================================ */
-
 SELECT      schema_name(o.schema_id)                     AS schema_name,
             o.name                                       AS table_name,
             CASE

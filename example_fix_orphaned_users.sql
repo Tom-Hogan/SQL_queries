@@ -9,9 +9,9 @@ History:
 RAISERROR(N'You want to run these statements one at a time.', 20, 1) WITH LOG;
 GO
 
--- ------------------------------------------------------------------------------------------------
--- get orphaned users
--- ------------------------------------------------------------------------------------------------
+/*
+    get orphaned users
+*/
 SELECT      dp.type_desc AS user_type,
             dp.sid,
             dp.name      AS user_name
@@ -31,30 +31,29 @@ SELECT      dp.principal_id,
             sp.is_disabled AS is_login_disabled
 FROM        sys.database_principals AS dp
 LEFT JOIN   sys.server_principals   AS sp   ON  sp.sid = dp.sid
-WHERE       dp.type IN ('S', 'U') -- SQL User, Windows User
+WHERE       dp.type IN ('S', 'U') /* SQL User, Windows User */
 AND         dp.principal_id > 4
 AND         sp.sid IS NULL
 ORDER BY    dp.name;
 -- */
 
--- ------------------------------------------------------------------------------------------------
--- if it doesn't exist, create login for orphaned user 
---  use SID returned in above query
--- ------------------------------------------------------------------------------------------------
+/*
+    if it doesn't exist, create login for orphaned user
+    === use SID returned in above query ===
+*/
 CREATE LOGIN [<login_name>]
     WITH PASSWORD = '<enterStrongPasswordHere>',
-         SID = <sid>;
+         SID = <sidFromAbove>;
 
 
--- ------------------------------------------------------------------------------------------------
--- map user to login
--- ------------------------------------------------------------------------------------------------
+/*
+    map user to login
+*/
 ALTER USER [<user_name>]
     WITH LOGIN = [<login_name>];
 
 
--- ------------------------------------------------------------------------------------------------
--- change password (if needed)
--- ------------------------------------------------------------------------------------------------
-ALTER LOGIN [<login_name>]
-    WITH PASSWORD = '<enterStrongPasswordHere>';
+/*
+    change password (if needed)
+*/
+ALTER LOGIN [<login_name>] WITH PASSWORD = '<enterStrongPasswordHere>';

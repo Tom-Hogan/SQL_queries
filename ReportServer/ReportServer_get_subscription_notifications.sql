@@ -2,7 +2,8 @@
 Purpose:
     Lists notifications on current reporting instance.
 
-    *** Uncomment and update WHERE clause to filter results for a specific report.
+Notes:
+    Contains commented out predefined WHERE clause to filter results for a specific report.
 
 History:
     2015-08-18  Tom Hogan           Created, based on a script by Dean Kalanquin on MSDN.
@@ -30,8 +31,8 @@ JOIN        dbo.Subscriptions   AS s    ON  n.SubscriptionID = s.SubscriptionID
 JOIN        dbo.Catalog         AS c    ON  c.ItemID = n.ReportID
 JOIN        dbo.Users           AS uo   ON  uo.UserID = s.OwnerID
 JOIN        dbo.Users           AS um   ON  um.UserID = s.ModifiedByID
-            -- ------------------------------------------------------------------------------------------------
-            -- to get specific report
-            -- ------------------------------------------------------------------------------------------------
+            /*
+            === to get specific report ===
+            */
 --WHERE       c.Name = 'report_name'
 ORDER BY    n.NotificationEntered DESC;

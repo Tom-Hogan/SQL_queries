@@ -9,8 +9,7 @@ History:
 USE msdb;
 
 
--- get job schedules
-SELECT      l.name            AS job_owner,
+SELECT      p.name            AS job_owner,
             c.name            AS job_category,
             j.name            AS job_name,
             CASE
@@ -48,12 +47,9 @@ SELECT      l.name            AS job_owner,
             END               AS on_step_failure
 FROM        dbo.sysjobs                     AS j
 JOIN        dbo.syscategories               AS c    ON  c.category_id = j.category_id
-                                                        -- filter out scheduled reports
-                                                    AND c.name <> 'Report Server'
-                                                        -- filter out replication
-                                                    AND c.name NOT LIKE 'repl%'
+                                                    AND c.name <> 'Report Server'   /* exclude scheduled reports */
+                                                    AND c.name NOT LIKE 'repl%'     /* exclude replication */
 JOIN        dbo.sysjobsteps                 AS js   ON  js.job_id = j.job_id
-LEFT JOIN   master.sys.server_principals    AS l    ON  l.principal_id = j.owner_sid
+LEFT JOIN   master.sys.server_principals    AS p    ON  p.principal_id = j.owner_sid
 ORDER BY    j.name,
-            js.step_id
-;
+            js.step_id;

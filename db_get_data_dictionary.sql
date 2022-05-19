@@ -2,8 +2,9 @@
 Purpose:
     Returns tables, columns, column type, NULL option and if column is part of a PK/FK constraint.
 
-    *** Uncomment the "Profile the table column" section if you want some metrics about the values
-        stored in the tables.  This will take a long time to run.
+Notes:
+    Uncomment the "Profile the table column" section if you want some metrics about the values
+    stored in the tables.  This is pretty much a brute force approach and will take a long time to run.
 
 History:
     2004-11-12  Tom Hogan           Created.
@@ -11,19 +12,22 @@ History:
                                     - Added option to get record values.
 ================================================================================================ */
 SET NOCOUNT ON;
+SET ANSI_WARNINGS OFF;
 
-DECLARE @table_schema nvarchar(128),
-        @table_name   nvarchar(128),
-        @column_name  nvarchar(128),
-        @data_type    nvarchar(128),
-        @column_list  CURSOR,
-        @sql_cmd      nvarchar(4000);
 
--- create a temp table to table information
+DECLARE @table_schema   nvarchar(128),
+        @table_name     nvarchar(128),
+        @column_name    nvarchar(128),
+        @data_type      nvarchar(128),
+        @column_list    CURSOR,
+        @status_message nvarchar(200),
+        @sql_cmd        nvarchar(4000);
+
 DROP TABLE IF EXISTS #table_schema;
 DROP TABLE IF EXISTS #value_counts;
 
-CREATE TABLE #table_schema (
+CREATE TABLE #table_schema
+(
     table_schema        nvarchar(128) NOT NULL,
     table_name          nvarchar(128) NOT NULL,
     column_name         nvarchar(128) NOT NULL,
@@ -36,8 +40,8 @@ CREATE TABLE #table_schema (
     column_position     int           NOT NULL
 );
 
--- create temp table to hold row value results
-CREATE TABLE #value_counts (
+CREATE TABLE #value_counts
+(
     table_schema    nvarchar(128) NOT NULL,
     table_name      nvarchar(128) NOT NULL,
     column_name     nvarchar(128) NOT NULL,
@@ -47,10 +51,11 @@ CREATE TABLE #value_counts (
 );
 
 
--- ------------------------------------------------------------------------------------------------
--- load schema information for given table(s)
--- ------------------------------------------------------------------------------------------------
-INSERT INTO #table_schema (
+/*
+    load schema information for given table(s)
+*/
+INSERT INTO #table_schema
+(
             table_schema,
             table_name,
             column_name,
@@ -97,119 +102,126 @@ FROM        sys.columns AS c
 JOIN        sys.objects AS o    ON  o.object_id = c.object_id
 JOIN        sys.types   AS t    ON  t.user_type_id = c.user_type_id
 JOIN        sys.schemas AS s    ON  s.schema_id = o.schema_id
-            -- get primary key
+            /* primary key(s) */
 LEFT JOIN   (
-            SELECT  ic2.object_id AS table_id,
-                    ic2.column_id
-            FROM    sys.indexes         AS i2
-            JOIN    sys.index_columns   AS ic2  ON  ic2.object_id = i2.object_id
-                                                AND ic2.index_id = i2.index_id
-            JOIN    sys.columns         AS c2   ON  c2.object_id = ic2.object_id
-                                                AND c2.column_id = ic2.column_id
-            WHERE   i2.is_primary_key = 1
+                SELECT  ic2.object_id AS table_id,
+                        ic2.column_id
+                FROM    sys.indexes         AS i2
+                JOIN    sys.index_columns   AS ic2  ON  ic2.object_id = i2.object_id
+                                                    AND ic2.index_id = i2.index_id
+                JOIN    sys.columns         AS c2   ON  c2.object_id = ic2.object_id
+                                                    AND c2.column_id = ic2.column_id
+                WHERE   i2.is_primary_key = 1
             )           AS pk   ON  pk.table_id = o.object_id
                                 AND pk.column_id = c.column_id
-            -- get foreign key(s)
+            /* foreign key(s) */
 LEFT JOIN   (
-            SELECT  fkcol.object_id AS table_id,
-                    fkcol.column_id
-            FROM    sys.foreign_key_columns AS fkc
-            JOIN    sys.columns             AS fkcol    ON  fkcol.object_id = fkc.parent_object_id
-                                                        AND fkcol.column_id = fkc.parent_column_id
+                SELECT  fkcol.object_id AS table_id,
+                        fkcol.column_id
+                FROM    sys.foreign_key_columns AS fkc
+                JOIN    sys.columns             AS fkcol    ON  fkcol.object_id = fkc.parent_object_id
+                                                            AND fkcol.column_id = fkc.parent_column_id
             )           AS fk   ON  fk.table_id = o.object_id
                                 AND fk.column_id = c.column_id
-WHERE       o.type = 'U'    -- U = user table, V = view
+WHERE       o.type = 'U'    /* U = user table, V = view */
 ORDER BY    o.name,
             c.column_id;
 
 
 /*
--- ------------------------------------------------------------------------------------------------
--- profile the table columns
--- ------------------------------------------------------------------------------------------------
--- store table and column names in a cursor
-SET @column_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY FOR
-SELECT  table_schema,
-        table_name,
-        column_name,
-        data_type
-FROM    #table_schema;
+/*
+    use a cursor to store column names
+    work through the cursor to build and execute a statement that gets value counts for each
+*/
+SET @column_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
+FOR
+    SELECT  table_schema,
+            table_name,
+            column_name,
+            data_type
+    FROM    #table_schema;
 
 
--- loop through columns to get value counts
 OPEN @column_list;
 FETCH NEXT FROM @column_list INTO @table_schema, @table_name, @column_name, @data_type;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    PRINT @table_name + ' - ' + @column_name;
+    SET @status_message = 'Checking column: ' + @table_name + ' - ' + @column_name + ' ...';
+    RAISERROR(@status_message, 0, 1) WITH NOWAIT; 
 
     SET @sql_cmd = N'SELECT  ''';
 
-    -- count empty strings as NULLs for string data types
+    /* count empty strings as NULLs for string data types */
     IF @data_type IN ('varchar', 'nvarchar', 'char', 'nchar')
     BEGIN
-        SET @sql_cmd =
-            @sql_cmd + @table_schema + N''',
-        '''            + @table_name + N''',
-        '''            + @column_name
-            + N''',
-        count(*)    AS row_count,
-        count(DISTINCT
-                    CASE 
-                        WHEN ' + quotename(@column_name) + N'= ''''
-                            THEN NULL 
-                        ELSE ' + quotename(@column_name) + N'
-                    END)        AS distinct_values,
-        sum(CASE
-                WHEN ' + quotename(@column_name) + N' IS NULL THEN 1
-                WHEN ' + quotename(@column_name) + N' = '''' THEN 1
-                ELSE 0
-            END )   AS empty_values
-FROM    '              + quotename(@table_schema) + N'.' + quotename(@table_name) + N' WITH (NOLOCK)';
-    END;
-    -- ignore counts for XML data type
-    ELSE IF @data_type IN ('xml')
-    BEGIN
-        SET @sql_cmd = @sql_cmd + @table_schema + N''',
-        '''            + @table_name + N''',
-        '''            + @column_name + N''',
-        sum(0)  AS row_count,
-        sum(0)  AS distinct_values,
-        sum(0)  AS empty_values
-FROM    '              + quotename(@table_schema) + N'.' + quotename(@table_name) + N' WITH (NOLOCK)';
+        SET @sql_cmd += N'' + @table_schema + N''',' + char(10);
+        SET @sql_cmd += N'        ''' + @table_name + N''',' + char(10);
+        SET @sql_cmd += N'        ''' + @column_name + N''',' + char(10);
+        SET @sql_cmd += N'        count(*)  AS row_count,' + char(10);
+        SET @sql_cmd += N'        count(  DISTINCT  CASE ' + char(10);
+        SET @sql_cmd += N'                              WHEN ' + quotename(@column_name) + N'= '''' THEN NULL' + char(10);
+        SET @sql_cmd += N'                              ELSE ' + quotename(@column_name) + char(10);
+        SET @sql_cmd += N'                          END' + char(10);
+        SET @sql_cmd += N'             )    AS distinct_values,' + char(10);
+        SET @sql_cmd += N'        sum(  CASE' + char(10);
+        SET @sql_cmd += N'                  WHEN ' + quotename(@column_name) + N' IS NULL THEN 1' + char(10);
+        SET @sql_cmd += N'                  WHEN ' + quotename(@column_name) + N' = '''' THEN 1' + char(10);
+        SET @sql_cmd += N'                  ELSE 0' + char(10);
+        SET @sql_cmd += N'              END' + char(10);
+        SET @sql_cmd += N'           )      AS empty_values' + char(10);
+        SET @sql_cmd += N'FROM    ' + quotename(@table_schema) + N'.' + quotename(@table_name) + N' WITH (NOLOCK);' + char(10);
     END;
     ELSE
     BEGIN
-        SET @sql_cmd = @sql_cmd + @table_schema + N''',
-        '''            + @table_name + N''',
-        '''            + @column_name + N''',
-        count(*)    AS row_count,
-        count(DISTINCT ' + quotename(@column_name) + N')    AS distinct_values,
-        sum(CASE
-                WHEN ' + quotename(@column_name) + N' IS NULL THEN 1
-                ELSE 0
-            END )   AS empty_values
-FROM    '              + quotename(@table_schema) + N'.' + quotename(@table_name) + N' WITH (NOLOCK)';
+        /* ignore counts for XML data type */
+        IF @data_type IN ('xml')
+        BEGIN
+            SET @sql_cmd += N'' + @table_schema + N''',' + char(10);
+            SET @sql_cmd += N'        ''' + @table_name + N''',' + char(10);
+            SET @sql_cmd += N'        ''' + @column_name + N''',' + char(10);
+            SET @sql_cmd += N'        sum(0)  AS row_count,' + char(10);
+            SET @sql_cmd += N'        sum(0)  AS distinct_values,' + char(10);
+            SET @sql_cmd += N'        sum(0)  AS empty_values' + char(10);
+            SET @sql_cmd += N'FROM    ' + quotename(@table_schema) + N'.' + quotename(@table_name) + N' WITH (NOLOCK);' + char(10);
+        END;
+        ELSE
+        BEGIN
+            SET @sql_cmd += N'' + @table_schema + N''',' + char(10);
+            SET @sql_cmd += N'        ''' + @table_name + N''',' + char(10);
+            SET @sql_cmd += N'        ''' + @column_name + N''',' + char(10);
+            SET @sql_cmd += N'        count(*)                                          AS row_count,' + char(10);
+            SET @sql_cmd += N'        count(DISTINCT ' + quotename(@column_name) + N')  AS distinct_values,' + char(10);
+            SET @sql_cmd += N'        sum(  CASE' + char(10);
+            SET @sql_cmd += N'                  WHEN ' + quotename(@column_name) + N' IS NULL THEN 1' + char(10);
+            SET @sql_cmd += N'                  ELSE 0' + char(10);
+            SET @sql_cmd += N'              END' + char(10);
+            SET @sql_cmd += N'           )                                              AS empty_values' + char(10);
+            SET @sql_cmd += N'FROM    ' + quotename(@table_schema) + N'.' + quotename(@table_name) + N' WITH (NOLOCK);' + char(10);
+        END;
     END;
 
-    INSERT INTO #value_counts (
-                table_schema,
-                table_name,
-                column_name,
-                row_count,
-                distinct_values,
-                empty_values
+
+    INSERT INTO #value_counts
+    (
+        table_schema,
+        table_name,
+        column_name,
+        row_count,
+        distinct_values,
+        empty_values
     )
-    EXEC        ( @sql_cmd );
+    EXEC sys.sp_executesql
+        @sql_cmd = @sql_cmd;
 
     FETCH NEXT FROM @column_list INTO @table_schema, @table_name, @column_name, @data_type;
+
 END;
 */
 
--- ------------------------------------------------------------------------------------------------
--- return results
--- ------------------------------------------------------------------------------------------------
+/*
+    return results
+*/
 SELECT      s.table_schema,
             s.table_name,
             s.column_name,
@@ -223,22 +235,21 @@ SELECT      s.table_schema,
                 WHEN s.data_type = 'xml'
                     THEN NULL
                 ELSE v.row_count
-            END                                                            AS row_count,
+            END                                                           AS row_count,
             CASE
                 WHEN s.data_type = 'xml'
                     THEN NULL
                 ELSE v.distinct_values
-            END                                                            AS distinct_values,
+            END                                                           AS distinct_values,
             CASE
                 WHEN s.data_type = 'xml'
                     THEN NULL
                 ELSE v.empty_values
-            END                                                            AS empty_values
+            END                                                           AS empty_values
 FROM        #table_schema   AS s
 LEFT JOIN   #value_counts   AS v    ON  v.table_schema = s.table_schema
                                     AND v.table_name = s.table_name
                                     AND v.column_name = s.column_name
 ORDER BY    s.table_schema,
             s.table_name,
-            s.column_position
-;
+            s.column_position;

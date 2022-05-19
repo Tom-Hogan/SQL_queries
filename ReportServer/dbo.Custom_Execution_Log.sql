@@ -17,23 +17,35 @@ History:
                 e.UserName                                                                                         AS run_by,
                 e.ExecutionId                                                                                      AS execution_id,
                 CASE e.RequestType
-                    WHEN 0 THEN 'Interactive'
-                    WHEN 1 THEN 'Subscription'
-                    WHEN 2 THEN 'Refresh Cache'
+                    WHEN 0
+                        THEN 'Interactive'
+                    WHEN 1
+                        THEN 'Subscription'
+                    WHEN 2
+                        THEN 'Refresh Cache'
                     ELSE 'Unknown'
                 END                                                                                                AS request_type,
                 e.Format                                                                                           AS format,
                 replace(replace(replace(cast(e.Parameters AS nvarchar(MAX)), '%2F', '/'), '%3A', ':'), '%20', ' ') AS parameters,
                 CASE e.ReportAction
-                    WHEN 1 THEN 'Render'
-                    WHEN 2 THEN 'BookmarkNavigation'
-                    WHEN 3 THEN 'DocumentMapNavigation'
-                    WHEN 4 THEN 'DrillThrough'
-                    WHEN 5 THEN 'FindString'
-                    WHEN 6 THEN 'GetDocumentMap'
-                    WHEN 7 THEN 'Toggle'
-                    WHEN 8 THEN 'Sort'
-                    WHEN 9 THEN 'Execute'
+                    WHEN 1
+                        THEN 'Render'
+                    WHEN 2
+                        THEN 'BookmarkNavigation'
+                    WHEN 3
+                        THEN 'DocumentMapNavigation'
+                    WHEN 4
+                        THEN 'DrillThrough'
+                    WHEN 5
+                        THEN 'FindString'
+                    WHEN 6
+                        THEN 'GetDocumentMap'
+                    WHEN 7
+                        THEN 'Toggle'
+                    WHEN 8
+                        THEN 'Sort'
+                    WHEN 9
+                        THEN 'Execute'
                     ELSE 'Unknown'
                 END                                                                                                AS item_action,
                 e.TimeStart                                                                                        AS time_start,
@@ -42,13 +54,20 @@ History:
                 e.TimeProcessing                                                                                   AS time_to_process,
                 e.TimeRendering                                                                                    AS time_to_render,
                 CASE e.Source
-                    WHEN 1 THEN 'Live'
-                    WHEN 2 THEN 'Cache'
-                    WHEN 3 THEN 'Snapshot'
-                    WHEN 4 THEN 'History'
-                    WHEN 5 THEN 'AdHoc'
-                    WHEN 6 THEN 'Session'
-                    WHEN 7 THEN 'Rdce'
+                    WHEN 1
+                        THEN 'Live'
+                    WHEN 2
+                        THEN 'Cache'
+                    WHEN 3
+                        THEN 'Snapshot'
+                    WHEN 4
+                        THEN 'History'
+                    WHEN 5
+                        THEN 'AdHoc'
+                    WHEN 6
+                        THEN 'Session'
+                    WHEN 7
+                        THEN 'Rdce'
                     ELSE 'Unknown'
                 END                                                                                                AS source,
                 e.Status                                                                                           AS run_status,
@@ -58,20 +77,27 @@ History:
                 cbu.UserName                                                                                       AS created_by,
                 c.CreationDate                                                                                     AS created_date,
                 mbu.UserName                                                                                       AS modified_by,
-                c.ModifiedDate                                                                                     AS modified_date --,
+                c.ModifiedDate                                                                                     AS modified_date /*,
                 /*
-                -- ------------------------------------------------------------------------------------------------
-                -- for informational purposes
-                -- ------------------------------------------------------------------------------------------------
+                    for informational purposes
+                */
                 CASE c.type
-                    WHEN 1 THEN 'Folder'
-                    WHEN 2 THEN 'Report'
-                    WHEN 3 THEN 'XML'
-                    WHEN 4 THEN 'Linked Report'
-                    WHEN 5 THEN 'Data Source'
-                    WHEN 6 THEN 'Model'
-                    WHEN 8 THEN 'Shared Dataset'
-                    WHEN 9 THEN 'Report Part'
+                    WHEN 1
+                        THEN 'Folder'
+                    WHEN 2
+                        THEN 'Report'
+                    WHEN 3
+                        THEN 'XML'
+                    WHEN 4
+                        THEN 'Linked Report'
+                    WHEN 5
+                        THEN 'Data Source'
+                    WHEN 6
+                        THEN 'Model'
+                    WHEN 8
+                        THEN 'Shared Dataset'
+                    WHEN 9
+                        THEN 'Report Part'
                 END                                                                                                AS type_description
                 -- */
     FROM        dbo.ExecutionLogStorage AS e

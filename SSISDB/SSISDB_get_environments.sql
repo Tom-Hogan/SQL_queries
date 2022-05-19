@@ -25,8 +25,8 @@ ORDER BY    f.name,
             v.name;
 
 
--- environment references
- /*
+/* environment references */
+/*
 SELECT      f.name  AS folder_name,
             pr.name AS project_name,
             er.environment_name,

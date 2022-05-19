@@ -17,8 +17,7 @@ SELECT      i.cpu_count                                                         
             i.affinity_type_desc
 FROM        sys.dm_os_sys_info  AS i
 CROSS APPLY (
-            SELECT  value AS sql_memory
-            FROM    sys.configurations
-            WHERE   name = 'max server memory (MB)'
-            )                   AS m
-;
+                SELECT  value AS sql_memory
+                FROM    sys.configurations
+                WHERE   name = 'max server memory (MB)'
+            )                   AS m;

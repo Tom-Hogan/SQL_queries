@@ -6,30 +6,37 @@ History:
     2018-12-11  Tom Hogan           Created.
 ================================================================================================ */
 USE master;
+SET NOCOUNT ON;
 
 
 DECLARE @sql_cmd       nvarchar(MAX),
         @database_list CURSOR,
-        @database_name nvarchar(128);
+        @database_name nvarchar(128),
+        @debug         tinyint = 0;
 
 
--- create a temp table to hold results
+/* create a temp table to hold results */
 DROP TABLE IF EXISTS #results;
 
-CREATE TABLE #results (
-    database_name       nvarchar(128) NOT NULL,
-    login_name          nvarchar(128) NULL,
-    user_name           nvarchar(128) NULL,
-    user_type           nvarchar(60)  NULL,
-    role_name           nvarchar(128) NULL,
-    permission_class    nvarchar(60)  NULL,
-    permission_state    nvarchar(60)  NULL,
-    permission_name     nvarchar(128) NULL,
-    permission_object   nvarchar(500) NULL
+CREATE TABLE #results
+(
+    database_name     nvarchar(128) NOT NULL,
+    login_name        nvarchar(128) NULL,
+    user_name         nvarchar(128) NULL,
+    user_type         nvarchar(60)  NULL,
+    role_name         nvarchar(128) NULL,
+    permission_class  nvarchar(60)  NULL,
+    permission_state  nvarchar(60)  NULL,
+    permission_name   nvarchar(128) NULL,
+    permission_object nvarchar(500) NULL
 );
 
 
--- declare a cursor to store database names
+/*
+    use a cursor to store database names
+     - worth through the cursor to create and execture a statement that inserts each database's users and theor associated
+    roles into the temp table
+*/
 SET @database_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
     SELECT      name
@@ -40,18 +47,17 @@ FOR
     ORDER BY    name;
 
 
--- open cursor and work through records 
 OPEN @database_list;
 FETCH NEXT FROM @database_list INTO @database_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-
-    -- insert login name and their roles in the databases into temp tables
-    SELECT  @sql_cmd = cast('' AS nvarchar(MAX)) + N'
+    SELECT  @sql_cmd =
+        cast('' AS nvarchar(MAX)) + N'
     USE ' + quotename(@database_name) + N';
 
-    INSERT INTO #results (
+    INSERT INTO #results
+    (
                 database_name,
                 login_name,
                 user_name,
@@ -166,29 +172,37 @@ BEGIN
     AND         dp.type <> ''R''';
 
 
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    IF @debug = 1
+        SELECT  @sql_cmd AS [processing-instruction(x)]
+        FOR XML PATH('');
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @database_list INTO @database_name;
 END;
 
 
--- return results
-SELECT      database_name,
-            login_name,
-            user_name,
-            user_type,
-            role_name,
-            permission_class,
-            permission_state,
-            permission_name,
-            permission_object
-FROM        #results
-WHERE       permission_name <> 'CONNECT'
-ORDER BY    database_name,
-            login_name,
-            user_name, 
-            role_name,
-            permission_object,
-            permission_state,
-            permission_name;
+/*
+    return results
+*/
+IF @debug = 0
+    SELECT      database_name,
+                login_name,
+                user_name,
+                user_type,
+                role_name,
+                permission_class,
+                permission_state,
+                permission_name,
+                permission_object
+    FROM        #results
+    WHERE       permission_name <> 'CONNECT'
+    ORDER BY    database_name,
+                login_name,
+                user_name,
+                role_name,
+                permission_object,
+                permission_state,
+                permission_name;

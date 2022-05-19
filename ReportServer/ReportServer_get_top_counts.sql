@@ -7,7 +7,8 @@ Purpose:
      - largest (most rows)
      - users (called by most users)
 
-    *** Uses custom view (custom_execution_log) to get data about report runs.
+Notes:
+    Uses custom view (custom_execution_log) to get data about report runs.
 
 History:
     Unknown     Tom Hogan       Created.
@@ -19,11 +20,11 @@ SET NOCOUNT ON;
 DECLARE @start_date datetime,
         @end_date   datetime;
 
-SET @start_date = '20150301';   -- format yyyymmdd
-SET @end_date = '20150331';     -- format yyyymmdd
+SET @start_date = '20150301'; /* format yyyymmdd */
+SET @end_date   = '20150331'; /* format yyyymmdd */
 
 
--- most executed
+/* most executed */
 SELECT      TOP ( 10 )
             report_name,
             count(report_name)         AS executions,
@@ -39,7 +40,7 @@ ORDER BY    count(report_name) DESC,
             report_name;
 
 
--- longest running
+/* longest running */
 SELECT      TOP ( 10 )
             report_name,
             count(report_name)                          AS executions,
@@ -52,7 +53,7 @@ ORDER BY    average_time DESC,
             report_name;
 
 
--- largest
+/* largest */
 SELECT      TOP ( 10 )
             report_name,
             count(report_name) AS executions,
@@ -64,7 +65,7 @@ GROUP BY    report_name
 ORDER BY    average_rows DESC;
 
 
--- users
+/* users */
 SELECT      TOP ( 10 )
             run_by,
             count(report_name) AS executions

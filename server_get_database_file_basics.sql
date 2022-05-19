@@ -36,5 +36,4 @@ FROM        sys.master_files    AS mf
 JOIN        sys.databases       AS d    ON  d.database_id = mf.database_id
 --WHERE       mf.is_percent_growth = 1
 ORDER BY    d.name,
-            mf.type_desc DESC
-;
+            mf.type_desc DESC;

@@ -2,7 +2,8 @@
 Purpose:
     Lists report executions against current reporting instance.
 
-    *** Uncomment and update WHERE clause to filter results for a specific report.
+Notes:
+    Contains commented out predefined WHERE clause to filter results for a specific report.
 
 History:
     2011-08-03  Tom Hogan           Created.
@@ -18,11 +19,12 @@ SELECT      e.instance_name,
             e.run_by,
             e.request_type,
             e.format                                                       AS report_format,
-            cast((
-                 SELECT token AS parameter
-                 FROM   dbo.Split_String_XML(e.parameters, N'&')
-                 FOR XML PATH(''), ELEMENTS
-                 ) AS xml)                                                 AS report_parameters,
+            cast(
+            (
+                SELECT  token AS parameter
+                FROM    dbo.Split_String_XML(e.parameters, N'&')
+                FOR XML PATH(''), ELEMENTS
+            ) AS xml)                                                      AS report_parameters,
             e.time_start,
             e.time_end,
             e.time_to_retrieve_data,
@@ -32,8 +34,8 @@ SELECT      e.instance_name,
             e.run_status,
             e.row_count
 FROM        dbo.custom_execution_log    AS e
-            -- ------------------------------------------------------------------------------------------------
-            -- to get specific report
-            -- ------------------------------------------------------------------------------------------------
+            /*
+            === to get specific report ===
+            */
 --WHERE       e.report_name = 'report_name'
 ORDER BY    e.time_start DESC;

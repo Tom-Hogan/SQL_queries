@@ -7,7 +7,6 @@ History:
     2007-07-05  Tom Hogan           Updated to use 2005 sys views.
     2015-06-09  Tom Hogan           Added On Delete / On Update action columns.
 ================================================================================================ */
-
 SELECT      fk.name                                                         AS foreign_key,
             object_name(fk.parent_object_id)                                AS fk_table,
             col_name(fkc.parent_object_id, fkc.parent_column_id)            AS fk_column,
@@ -27,5 +26,4 @@ SELECT      fk.name                                                         AS f
 FROM        sys.foreign_keys        AS fk
 JOIN        sys.foreign_key_columns AS fkc  ON  fkc.constraint_object_id = fk.object_id
 ORDER BY    fk_table,
-            foreign_key
-;
+            foreign_key;

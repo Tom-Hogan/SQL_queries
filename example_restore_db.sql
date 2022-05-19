@@ -5,26 +5,30 @@ Purpose:
 History:
     2004-01-19  Tom Hogan           Created.
 ================================================================================================ */
+RAISERROR(N'These are examples  You want to update and run these statements as appropriate.', 20, 1) WITH LOG;
+GO
 
--- ------------------------------------------------------------------------------------------------
--- to set database to single user mode
--- ------------------------------------------------------------------------------------------------
+/*
+    to set database to single user mode
+*/
 ALTER DATABASE WideWorldImporters
     SET SINGLE_USER
     WITH ROLLBACK IMMEDIATE;
 GO
 
 
--- ------------------------------------------------------------------------------------------------
--- to restore a backup of one database to another database
--- ------------------------------------------------------------------------------------------------
--- get logical and physical names
+/*
+    to restore a backup of one database to another database
+*/
+/* get logical and physical names */
 RESTORE FILELISTONLY
     FROM DISK = N'X:\Backups\WideWorldImporters.bak';
 
--- replace logical name (immediately after MOVE) with those listed by first statement
--- replace physical file locations (after the TO on the MOVE lines) with the file 
---    locations and names you are moving to
+/*
+ • replace logical name (immediately after MOVE) with those listed by first statement
+ • replace physical file locations (after the TO on the MOVE lines) with the file locations 
+   and names you are moving to
+*/
 RESTORE DATABASE WideWorldImporters
     FROM DISK = N'X:\Backups\WideWorldImporters.bak'
     WITH MOVE N'WWI_Primary'
@@ -34,17 +38,17 @@ RESTORE DATABASE WideWorldImporters
          REPLACE;
 
 
--- ------------------------------------------------------------------------------------------------
--- to restore a database to the same database
--- ------------------------------------------------------------------------------------------------
+/*
+    to restore a database to the same database
+*/
 RESTORE DATABASE WideWorldImporters
     FROM DISK = N'X:\Backups\WideWorldImporters.bak'
     WITH REPLACE;
 
 
--- ------------------------------------------------------------------------------------------------
--- to restore a database, then transaction logs
--- ------------------------------------------------------------------------------------------------
+/*
+    to restore a database, then transaction logs
+*/
 RESTORE DATABASE WideWorldImporters
     FROM DISK = N'X:\Backups\WideWorldImporters.bak'
     WITH MOVE N'WideWorldImporters'
@@ -61,8 +65,10 @@ RESTORE LOG WideWorldImporters
 RESTORE LOG WideWorldImporters
     FROM DISK = 'X:\Backups\WideWorldImporters_tlog_201805010800.trn'
     WITH NORECOVERY;
-    /* -- add STOPAT clause to do a point in time recovery
-         STOPAT = 'May 1, 2018 6:00:00 AM'; */
+/*
+    add STOPAT clause to do a point in time recovery
+    STOPAT = 'May 1, 2018 6:00:00 AM'; 
+*/
 
 RESTORE LOG WideWorldImporters
     WITH RECOVERY;

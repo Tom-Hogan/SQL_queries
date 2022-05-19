@@ -1,15 +1,16 @@
 /* ================================================================================================
 Purpose:
-    Drops all objects in a database.
+    Drops all objects in a database.  By ALL we mean: tables, views, procedures, functions, and synonyms.
 
-    *** Update database name.
+Notes
+    Update database name.
  
 History:
     2006-11-14  Tom Hogan           Created.
     2010-11-01  Tom Hogan           Added synonyms.
     2015-07-22  Tom Hogan           Updated to use sys views.
 ================================================================================================ */
-USE ?;      -- update with database name to have ALL objects dropped
+USE ?;      /* update with database name to have ALL objects dropped */
 
 
 DECLARE @table_schema     nvarchar(128),
@@ -23,179 +24,190 @@ DECLARE @table_schema     nvarchar(128),
         @procedure_list   CURSOR,
         @function_list    CURSOR,
         @synonym_list     CURSOR,
-        @sql_cmd          nvarchar(4000);
+        @sql_cmd          nvarchar(4000),
+        @debug            tinyint = 0;
 
 
--- ------------------------------------------------------------------------------------------------
--- foreign keys
--- ------------------------------------------------------------------------------------------------
--- open a cursor to store FK names
+/*
+    foreign keys
+     - use a cursor to store their names
+     - work through the cursor to build and execute a statement that drops each 
+*/
 SET @foreign_key_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
-    SELECT      quotename(s.name)   AS table_schema,
-                quotename(o.name)   AS table_name,
-                quotename(fk.name)  AS constraint_name
+    SELECT      quotename(s.name)  AS table_schema,
+                quotename(o.name)  AS table_name,
+                quotename(fk.name) AS constraint_name
     FROM        sys.foreign_keys    AS fk
     JOIN        sys.objects         AS o    ON  o.object_id = fk.parent_object_id
-                                                -- get non-Microsoft objects
-                                            AND o.is_ms_shipped = 0
+                                            AND o.is_ms_shipped = 0 /* user created */
     JOIN        sys.schemas         AS s    ON  s.schema_id = o.schema_id
-                -- get non-Microsoft objects
-    WHERE       fk.is_ms_shipped = 0
+    WHERE       fk.is_ms_shipped = 0    /* user created */
     ORDER BY    table_schema,
                 table_name,
                 constraint_name;
 
--- work through cursor
--- build command to drop foreign key and then execute    
 OPEN @foreign_key_list;
 FETCH NEXT FROM @foreign_key_list INTO @table_schema, @table_name, @fk_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    SET @sql_cmd = N'ALTER TABLE ' + @table_schema + N'.' + @table_name + N' DROP CONSTRAINT ' + @fk_name;
+    SET @sql_cmd = N'ALTER TABLE ' + @table_schema + N'.' + @table_name + N' DROP CONSTRAINT ' + @fk_name + N';';
 
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    IF @debug = 1
+        PRINT @sql_cmd;
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @foreign_key_list INTO @table_schema, @table_name, @fk_name;
 END;
 
 
--- ------------------------------------------------------------------------------------------------
--- views
--- ------------------------------------------------------------------------------------------------
--- open a cursor to store view names
+/*
+    views
+     - use a cursor to store their names
+     - work through the cursor to build and execute a statement that drops each 
+*/
 SET @view_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
-    SELECT      quotename(s.name)   AS table_schema,
-                quotename(o.name)   AS table_name
+    SELECT      quotename(s.name) AS table_schema,
+                quotename(o.name) AS table_name
     FROM        sys.objects AS o
     JOIN        sys.schemas AS s    ON  s.schema_id = o.schema_id
-                -- get non-Microsoft objects
-    WHERE       o.is_ms_shipped = 0
-    AND         o.type = 'V'    -- views
+    WHERE       o.is_ms_shipped = 0 /* user created */
+    AND         o.type = 'V'        /* views */
     ORDER BY    table_schema,
                 table_name;
 
--- work through cursor
--- build command to drop view key and then execute
 OPEN @view_list;
-FETCH NEXT FROM @view_list INTO @table_schema, @table_name;
+FETCH NEXT FROM @view_list INTO @table_schema, @table_name; 
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    SET @sql_cmd = N'DROP VIEW ' + @table_schema + N'.' + @table_name;
+    SET @sql_cmd = N'DROP VIEW ' + @table_schema + N'.' + @table_name + N';';
 
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    IF @debug = 1
+        PRINT @sql_cmd;
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @view_list INTO @table_schema, @table_name;
 END;
 
 
--- ------------------------------------------------------------------------------------------------
--- tables
--- ------------------------------------------------------------------------------------------------
--- open a cursor to store table names
+/*
+    tables
+     - use a cursor to store their names
+     - work through the cursor to build and execute a statement that drops each 
+*/
 SET @table_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
-    SELECT      quotename(s.name)   AS table_schema,
-                quotename(o.name)   AS table_name
+    SELECT      quotename(s.name) AS table_schema,
+                quotename(o.name) AS table_name
     FROM        sys.objects AS o
     JOIN        sys.schemas AS s    ON  s.schema_id = o.schema_id
-                -- get non-Microsoft objects
-    WHERE       o.is_ms_shipped = 0
-    AND         o.type = 'U'    -- user tables
+    WHERE       o.is_ms_shipped = 0 /* user created */
+    AND         o.type = 'U'        /* user tables */
     ORDER BY    table_schema,
                 table_name;
 
--- work through cursor
--- build command to drop table and then execute
 OPEN @table_list;
 FETCH NEXT FROM @table_list INTO @table_schema, @table_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    SET @sql_cmd = N'DROP TABLE ' + @table_schema + N'.' + @table_name;
+    SET @sql_cmd = N'DROP TABLE ' + @table_schema + N'.' + @table_name + N';';
 
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    IF @debug = 1
+        PRINT @sql_cmd;
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @table_list INTO @table_schema, @table_name;
 END;
 
 
--- ------------------------------------------------------------------------------------------------
--- procedures
--- ------------------------------------------------------------------------------------------------
--- open a cursor to store procedure names
+/*
+    stored procedures
+     - use a cursor to store their names
+     - work through the cursor to build and execute a statement that drops each 
+*/
 SET @procedure_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
-    SELECT      quotename(s.name)   AS module_schema,
-                quotename(o.name)   AS module_name
+    SELECT      quotename(s.name) AS module_schema,
+                quotename(o.name) AS module_name
     FROM        sys.sql_modules AS sm
     JOIN        sys.objects     AS o    ON  o.object_id = sm.object_id
-                                            -- get non-Microsoft procedures
-                                        AND o.is_ms_shipped = 0
-                                        AND o.type = 'P'
+                                        AND o.is_ms_shipped = 0 /* user created */
+                                        AND o.type = 'P'        /* procedures */
     JOIN        sys.schemas     AS s    ON  s.schema_id = o.schema_id
     ORDER BY    module_schema,
                 module_name;
 
--- work through cursor
--- build command to drop procedure and then execute
 OPEN @procedure_list;
 FETCH NEXT FROM @procedure_list INTO @table_schema, @module_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    SET @sql_cmd = N'DROP PROCEDURE ' + @table_schema + N'.' + @module_name;
-    
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    SET @sql_cmd = N'DROP PROCEDURE ' + @table_schema + N'.' + @module_name + N';';
+
+    IF @debug = 1
+        PRINT @sql_cmd;
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @procedure_list INTO @table_schema, @module_name;
 END;
 
 
--- ------------------------------------------------------------------------------------------------
--- functions
--- ------------------------------------------------------------------------------------------------
--- open a cursor to store function names
+/*
+    functions
+     - use a cursor to store their names
+     - work through the cursor to build and execute a statement that drops each 
+*/
 SET @function_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
     SELECT      quotename(s.name) AS module_schema,
                 quotename(o.name) AS module_name
     FROM        sys.sql_modules AS sm
     JOIN        sys.objects     AS o    ON  o.object_id = sm.object_id
-                                            -- get non-Microsoft functions
-                                        AND o.is_ms_shipped = 0
-                                        AND o.type IN ('FN', 'IF', 'TF')
+                                        AND o.is_ms_shipped = 0             /* user created */
+                                        AND o.type IN ('FN', 'IF', 'TF')    /* functions */
     JOIN        sys.schemas     AS s    ON  s.schema_id = o.schema_id
     ORDER BY    module_schema,
                 module_name;
 
--- work through cursor
--- build command to drop function and then execute
 OPEN @function_list;
 FETCH NEXT FROM @function_list INTO @table_schema, @module_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    SET @sql_cmd = N'DROP FUNCTION ' + @table_schema + N'.' + @module_name;
-    
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    SET @sql_cmd = N'DROP FUNCTION ' + @table_schema + N'.' + @module_name + N';';
+
+    IF @debug = 1
+        PRINT @sql_cmd;
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @function_list INTO @table_schema, @module_name;
 END;
 
 
--- ------------------------------------------------------------------------------------------------
--- synonyms
--- ------------------------------------------------------------------------------------------------
--- open a cursor to store synonyms
+/*
+    synonyms
+     - use a cursor to store their names
+     - work through the cursor to build and execute a statement that drops each 
+*/
 SET @synonym_list = CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
 FOR
     SELECT      quotename(schema_name(schema_id)) + '.' + quotename(name)
@@ -203,17 +215,19 @@ FOR
     ORDER BY    schema_name(schema_id),
                 name;
 
--- work through cursor
--- build command to drop synonym and then execute    
 OPEN @synonym_list;
 FETCH NEXT FROM @synonym_list INTO @synonym_name;
 
 WHILE ( @@fetch_status = 0 )
 BEGIN
-    SET @sql_cmd = N'DROP SYNONYM ' + @synonym_name;
+    SET @sql_cmd = N'DROP SYNONYM ' + @synonym_name + N';';
 
-    EXEC sys.sp_executesql 
-        @stmt = @sql_cmd;
+    IF @debug = 1
+        PRINT @sql_cmd;
+
+    IF @debug = 0
+        EXEC sys.sp_executesql
+            @stmt = @sql_cmd;
 
     FETCH NEXT FROM @synonym_list INTO @synonym_name;
 END;

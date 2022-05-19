@@ -5,7 +5,6 @@ Purpose:
 History:
     2008-02-20  Tom Hogan           Created, based on script by Pinal Dave (C) 2011.
 ================================================================================================ */
-
 SELECT      TOP ( 25 )
             o.name                                              AS table_name,
             i.name                                              AS index_name,
@@ -24,12 +23,12 @@ JOIN        sys.indexes                 AS i    ON  i.index_id = ius.index_id
 JOIN        sys.objects                 AS o    ON  o.object_id = ius.object_id
 JOIN        sys.schemas                 AS s    ON  s.schema_id = o.schema_id
 JOIN        (
-            SELECT      sum(p2.rows) AS table_rows,
-                        p2.index_id,
-                        p2.object_id
-            FROM        sys.partitions  AS p2
-            GROUP BY    p2.index_id,
-                        p2.object_id
+                SELECT      sum(p2.rows) AS table_rows,
+                            p2.index_id,
+                            p2.object_id
+                FROM        sys.partitions AS p2
+                GROUP BY    p2.index_id,
+                            p2.object_id
             )                           AS p    ON  p.index_id = ius.index_id
                                                 AND p.object_id = ius.object_id
 WHERE       ius.database_id = db_id()
@@ -38,5 +37,4 @@ AND         i.is_primary_key = 0
 AND         i.is_unique_constraint = 0
 ORDER BY    ( ius.user_seeks + ius.user_scans + ius.user_lookups ),
             o.name,
-            i.name
-;
+            i.name;

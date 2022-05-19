@@ -1,9 +1,7 @@
-CREATE OR ALTER FUNCTION dbo.clean_string (
+CREATE OR ALTER FUNCTION dbo.clean_string
+(
     @string  varchar(8000),
-
-    -- 1. Case sensitive.
-    -- 2. The pattern set of characters must be for just one character.
-    @pattern varchar(100)
+    @pattern varchar(100)   /* Case sensitive.  The pattern set of characters must be for just one character. */
 )
 RETURNS varchar(8000)
 AS
@@ -33,10 +31,10 @@ History:
 BEGIN
     DECLARE @position smallint;
 
-    -- get starting position for pattern
+    /* get starting position for pattern */
     SELECT  @position = patindex(@pattern, @string COLLATE Latin1_General_BIN);
 
-    -- work through string
+    /* work through string */
     WHILE @position > 0
         SELECT  @string   = stuff(@string, @position, 1, ''),
                 @position = patindex(@pattern, @string COLLATE Latin1_General_BIN);

@@ -1,4 +1,5 @@
-CREATE OR ALTER FUNCTION dbo.check_non_printable_character (
+CREATE OR ALTER FUNCTION dbo.check_non_printable_character
+(
     @string varchar(8000)
 )
 RETURNS int
@@ -20,19 +21,19 @@ BEGIN
             @ascii_value      int,
             @is_bad_character int;
 
-    -- set initial values
+    /* set initial values */
     SET @position = 1;
     SET @length = len(@string);
     SET @is_bad_character = 0;
 
 
-    -- Check each character in the string for non-printable characters
+    /* check each character in the string for non-printable characters */
     WHILE @position <= @length
     AND   @is_bad_character = 0
     BEGIN
         SET @ascii_value = ascii(substring(@string, @position, 1));
 
-        -- range of printable ASCII characters is between 32 and 126
+        /* range of printable ASCII characters is between 32 and 126 */
         IF  @ascii_value < 32
         OR  @ascii_value > 126
         BEGIN
