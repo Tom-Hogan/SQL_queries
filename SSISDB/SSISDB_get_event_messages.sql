@@ -68,8 +68,8 @@ FROM        cte_events AS e
             === add / modify as needed ====
             */
 --WHERE       e.event_name IN ( 'OnError', 'OnTaskFailed', 'OnWarning' )
---WHERE       e.event_name IN ('OnPostExecute', 'OnPreExecute')
+--WHERE       e.event_name IN ( 'OnPostExecute', 'OnPreExecute' )
 --WHERE       e.package_name = 'Package'
---WHERE       e.execution_path LIKE '%<some executable>%'
+--WHERE       e.execution_path LIKE '%<some_executable>%'
 ORDER BY    e.message_time DESC,
             e.event_message_id DESC;

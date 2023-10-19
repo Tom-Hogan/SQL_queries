@@ -16,9 +16,13 @@ SELECT      dp.type_desc AS user_type,
             dp.sid,
             dp.name      AS user_name
 FROM        sys.database_principals AS dp
-LEFT JOIN   sys.server_principals   AS sp   ON  sp.sid = dp.sid
-WHERE       sp.sid IS NULL
-AND         dp.authentication_type_desc = 'INSTANCE'
+WHERE       dp.authentication_type_desc <> 'NONE'
+AND         NOT EXISTS
+            (
+                SELECT  1
+                FROM    sys.server_principals AS sp
+                WHERE   sp.sid = dp.sid
+            )
 ORDER BY    dp.name;
 
 /*
