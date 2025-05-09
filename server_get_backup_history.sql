@@ -21,12 +21,36 @@ SELECT      s.server_name,
                     THEN 'Differential'
                 WHEN 'L'
                     THEN 'Log'
-                ELSE 'Unknown'
+                WHEN 'F'
+                    THEN 'File/Filegroup'
+                WHEN 'G'
+                    THEN 'Differential File'
+                WHEN 'Q'
+                    THEN 'Differential Partial'
+                WHEN 'P'
+                    THEN 'Partial'
+                ELSE ''
             END                                                         AS backup_type,
             s.backup_finish_date,
+            isnull(s.name, '')                                          AS backup_set_name,
             m.physical_device_name,
+            CASE
+                WHEN m.device_type = 2
+                    THEN 'Disk'
+                WHEN m.device_type = 5
+                    THEN 'Tape'
+                WHEN m.device_type = 7
+                    THEN 'Virtual'
+                WHEN m.device_type = 9
+                    THEN 'Azure Storage'
+                WHEN m.device_type = 105
+                    THEN 'Disk'
+                ELSE ''
+            END                                                         AS device_type,
             cast(s.backup_size / 1024 / 1024 AS int)                    AS backup_size_in_MB,
             datediff(MINUTE, s.backup_start_date, s.backup_finish_date) AS backup_time_in_min,
+            s.user_name                                                 AS run_by,
+            s.is_snapshot,
             s.is_copy_only
 FROM        dbo.backupset           AS s
 JOIN        dbo.backupmediafamily   AS m    ON  m.media_set_id = s.media_set_id

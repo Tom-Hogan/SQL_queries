@@ -63,6 +63,9 @@ FROM        sys.databases
 WHERE       database_id > 4
 ORDER BY    name;
 
+/* example of comman to set compatibility level */
+ALTER DATABASE <database_name>
+    SET COMPATIBILITY_LEVEL = 160;
 
 /*
     7. Verify counts of objects

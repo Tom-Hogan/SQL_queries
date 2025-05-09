@@ -21,5 +21,5 @@ SELECT      CommandType,
             ErrorMessage,
             ExtendedInfo
 FROM        dbo.CommandLog
-ORDER BY    StartTime DESC
-;
+--WHERE       CommandType = 'ALTER_INDEX' /* DBCC_CHECKDB, UPDATE_STATISTICS, ALTER_INDEX */
+ORDER BY    StartTime DESC;

@@ -23,8 +23,8 @@ CREATE TABLE dbo.dim_date
 (
     date_id               int           NOT NULL,
     calendar_date         date          NOT NULL,
-    week_day_number       int           NOT NULL,   /* 1 = first day of week */
-    week_day_name         char(3)       NOT NULL,   /* Tue */
+    day_of_week_number    int           NOT NULL,   /* 1 = first day of week */
+    day_of_week_name      char(3)       NOT NULL,   /* Tue */
     week_number           int           NOT NULL,   /* 1, 2, 3, etc. */
     week_name             char(5)       NOT NULL,   /* Wk 01 */
     week_year             char(10)      NOT NULL,   /* Wk 01 2020 */
@@ -72,8 +72,8 @@ GO
      * default fiscal month start date is 10 (Oct)
 */
 WITH
-cte_tally ( n ) AS
-(
+    cte_tally ( n ) AS
+    (
     -- SQL Prompt Formatting OFF
     SELECT      row_number() OVER ( ORDER BY ( SELECT NULL ))
     FROM        ( VALUES ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ) ) AS t0 ( n ) /* 10 rows */
@@ -82,54 +82,54 @@ cte_tally ( n ) AS
     CROSS JOIN  ( VALUES ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ) ) AS t3 ( n ) /* 10,000 rows */
     CROSS JOIN  ( VALUES ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ), ( 0 ) ) AS t4 ( n ) /* 100,000 rows */
     -- SQL Prompt Formatting ON
-),
-cte_calendar AS
-(
-    SELECT  dateadd(DAY, t.n - 1, dt.table_start_date) AS calendar_date,
-            10                                         AS first_fiscal_month
-    FROM    cte_tally AS t
-                /* 
-                === set start and end dates here ===
-                */
-    CROSS APPLY
-            (
-                SELECT  datefromparts(2020, 1, 1)                  AS table_start_date,
-                        datefromparts(year(sysdatetime()), 12, 31) AS table_end_date
-            )         AS dt
-    WHERE   t.n <= datediff(DAY, dt.table_start_date, dt.table_end_date) + 1
-),
-cte_calendar_dates AS
-(
-    SELECT  convert(char(8), c.calendar_date, 112)                                                                               AS date_id,
-            c.calendar_date                                                                                                      AS calendar_date,
-            datepart(WEEKDAY, c.calendar_date)                                                                                   AS week_day_number,
-            left(datename(WEEKDAY, c.calendar_date), 3)                                                                          AS day_of_week_name,
-            datepart(WEEK, c.calendar_date)                                                                                      AS week_number,
-            'Wk ' + right('00' + cast(datepart(WEEK, c.calendar_date) AS varchar(2)), 2)                                         AS week_name,
-            'Wk ' + right('00' + cast(datepart(WEEK, c.calendar_date) AS varchar(2)), 2) + ' ' + datename(YEAR, c.calendar_date) AS week_year,
-            datepart(MONTH, c.calendar_date)                                                                                     AS month_number,
-            left(datename(MONTH, c.calendar_date), 3)                                                                            AS month_name,
-            left(datename(MONTH, c.calendar_date), 3) + ' ' + datename(YEAR, c.calendar_date)                                    AS month_year,
-            dateadd(DAY, - ( day(c.calendar_date) - 1 ), c.calendar_date)                                                        AS month_start_date,
-            dateadd(DAY, - ( day(dateadd(MONTH, 1, c.calendar_date))), dateadd(MONTH, 1, c.calendar_date))                       AS month_end_date,
-            datepart(QUARTER, c.calendar_date)                                                                                   AS quarter_number,
-            'Q' + convert(varchar(5), datepart(QUARTER, c.calendar_date))                                                        AS quarter_name,
-            'Q' + convert(varchar(5), datepart(QUARTER, c.calendar_date)) + ' ' + datename(YEAR, c.calendar_date)                AS quarter_year,
-            dateadd(QUARTER, datediff(QUARTER, 0, c.calendar_date), 0)                                                           AS quarter_start_date,
-            dateadd(QUARTER, 1, dateadd(QUARTER, datediff(QUARTER, 0, c.calendar_date), 0)) - 1                                  AS quarter_end_date,
-            datename(YEAR, c.calendar_date)                                                                                      AS year_number,
-            datename(YEAR, c.calendar_date)                                                                                      AS year_name,
-            convert(date, datename(YEAR, c.calendar_date) + '0101')                                                              AS year_start_date,
-            convert(date, datename(YEAR, c.calendar_date) + '1231')                                                              AS year_end_date,
-            ( 12 - c.first_fiscal_month ) + 1                                                                                    AS fiscal_month_offset
-    FROM    cte_calendar AS c
-)
+    ),
+    cte_calendar AS
+    (
+        SELECT  dateadd(DAY, t.n - 1, dt.table_start_date) AS calendar_date,
+                10                                         AS first_fiscal_month
+        FROM    cte_tally AS t
+        /* 
+        === set start and end dates here ===
+        */
+        CROSS APPLY
+                (
+                    SELECT  datefromparts(2020, 1, 1)                  AS table_start_date,
+                            datefromparts(year(sysdatetime()), 12, 31) AS table_end_date
+                )         AS dt
+        WHERE   t.n <= datediff(DAY, dt.table_start_date, dt.table_end_date) + 1
+    ),
+    cte_calendar_dates AS
+    (
+        SELECT  convert(char(8), c.calendar_date, 112)                                                                               AS date_id,
+                c.calendar_date                                                                                                      AS calendar_date,
+                datepart(WEEKDAY, c.calendar_date)                                                                                   AS day_of_week_number,
+                left(datename(WEEKDAY, c.calendar_date), 3)                                                                          AS day_of_week_name,
+                datepart(WEEK, c.calendar_date)                                                                                      AS week_number,
+                'Wk ' + right('00' + cast(datepart(WEEK, c.calendar_date) AS varchar(2)), 2)                                         AS week_name,
+                'Wk ' + right('00' + cast(datepart(WEEK, c.calendar_date) AS varchar(2)), 2) + ' ' + datename(YEAR, c.calendar_date) AS week_year,
+                datepart(MONTH, c.calendar_date)                                                                                     AS month_number,
+                left(datename(MONTH, c.calendar_date), 3)                                                                            AS month_name,
+                left(datename(MONTH, c.calendar_date), 3) + ' ' + datename(YEAR, c.calendar_date)                                    AS month_year,
+                dateadd(DAY, - ( day(c.calendar_date) - 1 ), c.calendar_date)                                                        AS month_start_date,
+                dateadd(DAY, - ( day(dateadd(MONTH, 1, c.calendar_date))), dateadd(MONTH, 1, c.calendar_date))                       AS month_end_date,
+                datepart(QUARTER, c.calendar_date)                                                                                   AS quarter_number,
+                'Q' + convert(varchar(5), datepart(QUARTER, c.calendar_date))                                                        AS quarter_name,
+                'Q' + convert(varchar(5), datepart(QUARTER, c.calendar_date)) + ' ' + datename(YEAR, c.calendar_date)                AS quarter_year,
+                dateadd(QUARTER, datediff(QUARTER, 0, c.calendar_date), 0)                                                           AS quarter_start_date,
+                dateadd(QUARTER, 1, dateadd(QUARTER, datediff(QUARTER, 0, c.calendar_date), 0)) - 1                                  AS quarter_end_date,
+                datename(YEAR, c.calendar_date)                                                                                      AS year_number,
+                datename(YEAR, c.calendar_date)                                                                                      AS year_name,
+                convert(date, datename(YEAR, c.calendar_date) + '0101')                                                              AS year_start_date,
+                convert(date, datename(YEAR, c.calendar_date) + '1231')                                                              AS year_end_date,
+                ( 12 - c.first_fiscal_month ) + 1                                                                                    AS fiscal_month_offset
+        FROM    cte_calendar AS c
+    )
 INSERT INTO dbo.dim_date
 (
         date_id,
         calendar_date,
-        week_day_number,
-        week_day_name,
+        day_of_week_number,
+        day_of_week_name,
         week_number,
         week_name,
         week_year,
@@ -159,7 +159,7 @@ INSERT INTO dbo.dim_date
 )
 SELECT  d.date_id,
         d.calendar_date,
-        d.week_day_number,
+        d.day_of_week_number,
         d.day_of_week_name,
         d.week_number,
         d.week_name,
@@ -184,7 +184,7 @@ SELECT  d.date_id,
         datepart(QUARTER, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date))                          AS fiscal_quarter_number,
         'FQ' + convert(char(4), datepart(QUARTER, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date))) AS fiscal_quarter_name,
         'FQ' + convert(char(1), datepart(QUARTER, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date))) + ' '
-            + convert(char(4), datepart(YEAR, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date)))     AS fiscal_quarter_year,
+        + convert(char(4), datepart(YEAR, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date)))         AS fiscal_quarter_year,
         datepart(YEAR, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date))                             AS fiscal_year_number,
         'FY ' + convert(char(4), datepart(YEAR, dateadd(MONTH, d.fiscal_month_offset, d.calendar_date)))   AS fiscal_year_name,
         /* business day values; used to calculate business days per period */
@@ -206,8 +206,8 @@ INSERT INTO dbo.dim_date
 (
         date_id,
         calendar_date,
-        week_day_number,
-        week_day_name,
+        day_of_week_number,
+        day_of_week_name,
         week_number,
         week_name,
         week_year,

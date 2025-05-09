@@ -261,11 +261,12 @@ __pycache__/
 *.pyc
 
 # local files
+.azuredatastudio/settings.json
 /_MIB
 /_Output
 /FirstResponderKit.zip
-/Install-Core-Blitz-No-Query-Store.sql
 /MaintenanceSolution.sql
 /who_is_active.sql
-.azuredatastudio/settings.json
 /sp_WhoIsActive.sql
+/Install-All-Scripts.sql
+/DarlingData.*

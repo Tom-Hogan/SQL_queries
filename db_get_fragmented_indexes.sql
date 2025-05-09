@@ -9,18 +9,19 @@ Notes:
 History:
     2008-05-29  Tom Hogan           Created.
 ================================================================================================ */
-SELECT      d.name                                   AS database_name,
-            o.name                                   AS table_name,
-            i.name                                   AS index_name,
+SELECT      d.name                                     AS database_name,
+            o.name                                     AS table_name,
+            i.name                                     AS index_name,
             s.page_count,
-            round(s.avg_fragmentation_in_percent, 2) AS avg_fragmentation_in_percent,
+            round(s.avg_page_space_used_in_percent, 4) AS avg_page_space_used_in_percent,
+            round(s.avg_fragmentation_in_percent, 4)   AS avg_fragmentation_in_percent,
             CASE
                 WHEN s.avg_fragmentation_in_percent > 50
                     THEN 'Rebuild'
                 WHEN s.avg_fragmentation_in_percent > 30
                     THEN 'Reorganize'
                 ELSE 'No Action'
-            END                                      AS index_needs
+            END                                        AS index_needs
 FROM        sys.dm_db_index_physical_stats(db_id(), object_id(NULL), NULL, NULL, 'DETAILED')    AS s
 JOIN        sys.indexes                                                                         AS i    ON  i.object_id = s.object_id
                                                                                                         AND i.index_id = s.index_id
